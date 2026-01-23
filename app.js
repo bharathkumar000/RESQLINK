@@ -13,7 +13,7 @@ let routeTimeout = null;
 let routeModalTimeout = null;
 
 const BASE_LOCATION = {
-    name: "VVCE",
+    name: "VVCE-MYS",
     lat: 12.3366,
     lng: 76.6187
 };
