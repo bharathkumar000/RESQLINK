@@ -13,7 +13,7 @@ let routeTimeout = null;
 let routeModalTimeout = null;
 
 const BASE_LOCATION = {
-    name: "Vidya Vardhaka College of Engineering",
+    name: "VVCE",
     lat: 12.3366,
     lng: 76.6187
 };
