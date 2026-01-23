@@ -19,8 +19,8 @@ const BASE_LOCATION = {
 };
 
 const CREDENTIALS = {
-    admin: { username: "admin", password: "121212", role: "Admin" },
-    user: { username: "user", password: "user123", role: "User" }
+    admin: { username: "1", password: "1", role: "Admin" },
+    user: { username: "2", password: "2", role: "User" }
 };
 
 // --- Firebase Configuration ---
