@@ -1,4 +1,14 @@
 // Global State
+
+// Error overlay helper
+function showErrorOverlay(message) {
+    const overlay = document.getElementById('jsErrorOverlay');
+    if (overlay) {
+        overlay.textContent = message;
+        overlay.style.display = 'flex';
+    }
+}
+
 let currentUser = null;
 let requests = [];
 let resources = [];
@@ -24,17 +34,25 @@ const CREDENTIALS = {
 };
 
 // --- Supabase Configuration ---
-// Credentials are loaded from environment variables via /config.js endpoint
-const SUPABASE_URL = window.ENV_CONFIG?.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = window.ENV_CONFIG?.SUPABASE_ANON_KEY || '';
-
-// Initialize Supabase client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Credentials will be loaded from environment variables via /config.js endpoint
+// Supabase client will be initialized after config loads
+let supabase = null;
 
 const WEATHER_API_KEY = "ffc79bc9d96b20005a62a24e1f39113a";
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Supabase client after config.js has loaded
+    if (window.ENV_CONFIG && window.ENV_CONFIG.SUPABASE_URL && window.ENV_CONFIG.SUPABASE_ANON_KEY) {
+        supabase = window.supabase.createClient(
+            window.ENV_CONFIG.SUPABASE_URL,
+            window.ENV_CONFIG.SUPABASE_ANON_KEY
+        );
+        console.log('✅ Supabase client initialized successfully');
+    } else {
+        console.warn('⚠️ Supabase config not loaded. Only hardcoded login will work.');
+    }
+
     fetchWeather(BASE_LOCATION.lat, BASE_LOCATION.lng);
     checkSavedSession();
     initLogin();
@@ -42,6 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Check for saved session in localStorage
 function checkSavedSession() {
+
+
     const savedUser = localStorage.getItem('drmsCurrentUser');
     if (savedUser) {
         try {
@@ -75,39 +95,47 @@ function initLogin() {
         } else if (username === CREDENTIALS.user.username && password === CREDENTIALS.user.password) {
             user = CREDENTIALS.user;
         } else {
-            // Try Supabase Authentication
-            try {
-                // Sign in with email and password
-                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                    email: username + "@resqlink.com",
-                    password: password
-                });
+            // Try Supabase Authentication (only if client is initialized)
+            if (supabase) {
+                try {
+                    // Sign in with email and password
+                    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                        email: username + "@resqlink.com",
+                        password: password
+                    });
 
-                if (authError) throw authError;
+                    if (authError) throw authError;
 
-                const supabaseUser = authData.user;
+                    const supabaseUser = authData.user;
 
-                // Fetch user profile with role from 'users' table
-                const { data: profileData, error: profileError } = await supabase
-                    .from('users')
-                    .select('username, role')
-                    .eq('id', supabaseUser.id)
-                    .single();
+                    // Fetch user profile with role from 'users' table
+                    const { data: profileData, error: profileError } = await supabase
+                        .from('users')
+                        .select('username, role')
+                        .eq('id', supabaseUser.id)
+                        .single();
 
-                if (profileError) {
-                    console.error("Profile fetch error:", profileError);
-                    // Fallback if profile doesn't exist
-                    user = { username: username, role: "User", uid: supabaseUser.id };
-                } else {
-                    user = {
-                        username: profileData.username,
-                        role: profileData.role,
-                        uid: supabaseUser.id
-                    };
+                    if (profileError) {
+                        console.error("Profile fetch error:", profileError);
+                        // Fallback if profile doesn't exist
+                        user = { username: username, role: "User", uid: supabaseUser.id };
+                    } else {
+                        user = {
+                            username: profileData.username,
+                            role: profileData.role,
+                            uid: supabaseUser.id
+                        };
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    document.getElementById('loginError').textContent = error.message || 'Invalid credentials';
+                    document.getElementById('loginError').style.display = 'block';
+                    return;
                 }
-            } catch (error) {
-                console.error("Login error:", error);
-                document.getElementById('loginError').textContent = error.message || 'Invalid credentials';
+            } else {
+                // Supabase not available, show error
+                console.error("Supabase not initialized and credentials don't match hardcoded values");
+                document.getElementById('loginError').textContent = 'Invalid username or password';
                 document.getElementById('loginError').style.display = 'block';
                 return;
             }
@@ -204,6 +232,12 @@ function initRegister() {
         }
 
         // Supabase Registration
+        if (!supabase) {
+            errorDiv.textContent = 'Registration unavailable. Supabase is not configured.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
         try {
             // Sign up with email and password, passing metadata for the trigger
             const { data, error } = await supabase.auth.signUp({
@@ -235,7 +269,9 @@ function initRegister() {
 
 async function logout() {
     try {
-        await supabase.auth.signOut();
+        if (supabase) {
+            await supabase.auth.signOut();
+        }
     } catch (e) {
         console.error("Supabase SignOut error:", e);
     }
@@ -255,60 +291,73 @@ async function logout() {
 }
 
 function initDashboard() {
-    loadDummyData();
+    console.log('🔧 initDashboard called');
+    try {
+        loadDummyData();
 
-    const adminDashboard = document.getElementById('adminDashboard');
-    const userDashboard = document.getElementById('userDashboard');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const userDashboard = document.getElementById('userDashboard');
 
-    if (currentUser.role === 'Admin') {
-        if (adminDashboard) adminDashboard.style.display = 'block';
-        if (userDashboard) userDashboard.style.display = 'none';
+        if (currentUser.role === 'Admin') {
+            if (adminDashboard) adminDashboard.style.display = 'block';
+            if (userDashboard) userDashboard.style.display = 'none';
 
-        initMap('map');
-        // initForm(); // Removed as Admin no longer has form
-        renderRequests();
-        renderResources();
-        updateStats();
-
-        const weatherSection = document.getElementById('weatherSection');
-        const statsGrid = document.getElementById('statsGrid');
-        const activeRequestsSection = document.getElementById('activeRequestsSection');
-        const resolvedRequestsSection = document.getElementById('resolvedRequestsSection');
-
-        if (weatherSection) weatherSection.style.display = 'block';
-        if (statsGrid) statsGrid.style.display = 'grid';
-        if (activeRequestsSection) activeRequestsSection.style.display = 'block';
-        if (activeRequestsSection) activeRequestsSection.style.display = 'block';
-        if (resolvedRequestsSection) resolvedRequestsSection.style.display = 'block';
-
-        const liveSheetSection = document.getElementById('liveSheetSection');
-        if (liveSheetSection) liveSheetSection.style.display = 'block';
-
-        initSheetRefresh();
-
-        document.getElementById('analyticsSection').style.display = 'block';
-        document.getElementById('addResourceBtn').style.display = 'block';
-        document.getElementById('addResourceBtn').addEventListener('click', openAddResourceModal);
-        updateAnalytics();
-
-        // Refresh active requests every 5 seconds
-        setInterval(() => {
+            // Guard Leaflet map initialization
+            if (typeof L !== 'undefined') {
+                initMap('map');
+            } else {
+                console.warn('⚠️ Leaflet library not loaded');
+            }
+            // initForm(); // Removed as Admin no longer has form
             renderRequests();
+            renderResources();
             updateStats();
-        }, 5000);
-    } else {
-        if (adminDashboard) adminDashboard.style.display = 'none';
-        if (userDashboard) userDashboard.style.display = 'block';
 
-        initMap('userMap');
-        initUserForm();
-        renderResources('userResourcesGrid');
+            const weatherSection = document.getElementById('weatherSection');
+            const statsGrid = document.getElementById('statsGrid');
+            const activeRequestsSection = document.getElementById('activeRequestsSection');
+            const resolvedRequestsSection = document.getElementById('resolvedRequestsSection');
 
-        const userRoleSpan = document.getElementById('userDashboardRole');
-        if (userRoleSpan) userRoleSpan.textContent = currentUser.fullName || 'User';
+            if (weatherSection) weatherSection.style.display = 'block';
+            if (statsGrid) statsGrid.style.display = 'grid';
+            if (activeRequestsSection) activeRequestsSection.style.display = 'block';
+            if (resolvedRequestsSection) resolvedRequestsSection.style.display = 'block';
+
+            const liveSheetSection = document.getElementById('liveSheetSection');
+            if (liveSheetSection) liveSheetSection.style.display = 'block';
+
+            initSheetRefresh();
+
+            document.getElementById('analyticsSection').style.display = 'block';
+            document.getElementById('addResourceBtn').style.display = 'block';
+            document.getElementById('addResourceBtn').addEventListener('click', openAddResourceModal);
+            updateAnalytics();
+
+            // Refresh active requests every 5 seconds
+            setInterval(() => {
+                renderRequests();
+                updateStats();
+            }, 5000);
+        } else {
+            if (adminDashboard) adminDashboard.style.display = 'none';
+            if (userDashboard) userDashboard.style.display = 'block';
+
+            if (typeof L !== 'undefined') {
+                initMap('userMap');
+            } else {
+                console.warn('⚠️ Leaflet library not loaded');
+            }
+            initUserForm();
+            renderResources('userResourcesGrid');
+
+            const userRoleSpan = document.getElementById('userDashboardRole');
+            if (userRoleSpan) userRoleSpan.textContent = currentUser.fullName || 'User';
+        }
+    } catch (e) {
+        console.error('❗ Error in initDashboard:', e);
+        showErrorOverlay('An unexpected error occurred while loading the dashboard: ' + (e.message || e));
     }
 }
-
 function loadDummyData() {
     // Calculate smart priorities for dummy data
     const getRandomOffset = () => (Math.random() * 0.04) - 0.02;

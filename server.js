@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const PORT = 5500;
+const PORT = 8000;
 
 const server = http.createServer((req, res) => {
     console.log(`request ${req.url}`);
