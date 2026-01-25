@@ -263,11 +263,13 @@ function initDashboard() {
         updateStats();
 
         const weatherSection = document.getElementById('weatherSection');
+        const aiDemandSection = document.getElementById('aiDemandSection');
         const statsGrid = document.getElementById('statsGrid');
         const activeRequestsSection = document.getElementById('activeRequestsSection');
         const resolvedRequestsSection = document.getElementById('resolvedRequestsSection');
 
         if (weatherSection) weatherSection.style.display = 'block';
+        if (aiDemandSection) aiDemandSection.style.display = 'block';
         if (statsGrid) statsGrid.style.display = 'grid';
         if (activeRequestsSection) activeRequestsSection.style.display = 'block';
         if (activeRequestsSection) activeRequestsSection.style.display = 'block';
@@ -928,6 +930,19 @@ function displayWeather(data) {
 function toggleWeather() {
     const content = document.getElementById('weatherContent');
     const icon = document.getElementById('weatherToggleIcon');
+
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.classList.add('expanded');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+function toggleAIDemand() {
+    const content = document.getElementById('aiDemandContent');
+    const icon = document.getElementById('aiDemandToggleIcon');
 
     if (content.classList.contains('expanded')) {
         content.classList.remove('expanded');
