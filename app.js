@@ -953,6 +953,56 @@ function toggleAIDemand() {
     }
 }
 
+function toggleMobileView() {
+    const body = document.body;
+    const toggleBtn = document.getElementById('mobileViewToggle');
+    const icon = toggleBtn.querySelector('i');
+
+    if (body.classList.contains('mobile-view-active')) {
+        // Switch to desktop view
+        body.classList.remove('mobile-view-active');
+        icon.className = 'fas fa-mobile-alt';
+        localStorage.setItem('mobileViewActive', 'false');
+    } else {
+        // Switch to mobile view (6.9 inches diagonal = 440px width)
+        body.classList.add('mobile-view-active');
+        icon.className = 'fas fa-desktop';
+        localStorage.setItem('mobileViewActive', 'true');
+    }
+}
+
+// Initialize mobile view state on page load
+function initMobileViewState() {
+    const isMobileView = localStorage.getItem('mobileViewActive') === 'true';
+    const body = document.body;
+    const toggleBtn = document.getElementById('mobileViewToggle');
+
+    if (isMobileView && toggleBtn) {
+        body.classList.add('mobile-view-active');
+        toggleBtn.querySelector('i').className = 'fas fa-desktop';
+    }
+}
+
+// Call on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobileViewState);
+} else {
+    initMobileViewState();
+}
+
+function toggleUserResources() {
+    const content = document.getElementById('userResourcesContent');
+    const icon = document.getElementById('userResourcesToggleIcon');
+
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.classList.add('expanded');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
 
 
 function openAllocateModal(requestId) {
@@ -1068,8 +1118,7 @@ function renderResources(gridId = 'resourcesGrid') {
         const card = document.createElement('div');
         card.className = 'resource-card';
         card.innerHTML = `
-            <h3>${resource.name}</h3>
-            <div class="type">${resource.type}</div>
+            <h3>${resource.name} <span style="font-weight: 400; color: #6d8b74;">(${resource.type.toLowerCase()})</span></h3>
             <div class="resource-bar">
                 <div class="resource-bar-fill" style="width: ${percentage}%"></div>
             </div>
