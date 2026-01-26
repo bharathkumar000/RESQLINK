@@ -331,8 +331,9 @@
         }
 
         textarea.form-control {
-            resize: vertical;
-            min-height: 150px;
+            resize: none;
+            min-height: 80px;
+            max-height: 80px;
         }
 
         .form-control:focus,
@@ -535,7 +536,7 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 8px;
         }
 
         .user-info {
@@ -562,9 +563,9 @@
         }
 
         .container {
-            max-width: 1600px;
+            width: 100%;
             margin: 0 auto;
-            padding: 24px;
+            padding: 10px;
         }
 
         .stats-grid {
@@ -775,7 +776,7 @@
         }
 
         .map-section h2 {
-            padding: 16px 20px;
+            padding: 10px 15px;
             font-size: 18px;
             border-bottom: 1px solid var(--color-border);
             background: var(--color-surface);
@@ -790,10 +791,12 @@
             background: #ffffff;
             border: 1px solid var(--color-border);
             border-radius: 12px;
-            padding: 24px;
-            height: 85vh;
-            overflow-y: auto;
+            padding: 15px;
+            height: 92vh;
+            overflow-y: hidden;
             box-shadow: 0 4px 12px rgba(95, 113, 97, 0.15);
+            display: flex;
+            flex-direction: column;
         }
 
         .form-section h2 {
@@ -1005,6 +1008,230 @@
             font-size: 18px;
             font-weight: 700;
             color: #3d4f3d;
+        }
+
+        /* Mobile View Toggle Styles */
+        /* Mobile View Toggle Styles */
+        body.mobile-view-active {
+            background: #2d3748;
+            overflow: hidden;
+            /* Prevent body scroll */
+            padding: 40px 0;
+            /* Vertical padding */
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.mobile-view-active #userDashboard {
+            width: 440px;
+            height: 90vh;
+            /* Approx 6.9 inches height vertical */
+            /* Fixed height for the phone */
+            max-height: 860px;
+            margin: 0 auto;
+            box-shadow: 0 0 0 14px #1a1a1a,
+                0 0 0 16px #404040,
+                0 20px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow-y: auto;
+            /* Restore scrolling for the app */
+            overflow-x: hidden;
+            border-radius: 40px;
+            border: 2px solid #000;
+            background: #f4f7f6;
+            /* Revert to light background */
+            scrollbar-width: none;
+        }
+
+        body.mobile-view-active #userDashboard::-webkit-scrollbar,
+        body.mobile-view-active *::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar for everything in mobile view */
+        }
+
+        /* iPhone-style notch */
+        body.mobile-view-active #userDashboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 9999;
+            box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Notch camera and speaker */
+        body.mobile-view-active #userDashboard::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #2d2d2d;
+            border-radius: 3px;
+            z-index: 10000;
+        }
+
+
+        body.mobile-view-active .container {
+            padding: 8px;
+            min-height: calc(100% - 140px);
+            /* Adjust for header height */
+            /* Removed sage green background override */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mobile View - Header Adjustments */
+        body.mobile-view-active .header {
+            padding: 40px 12px 12px 12px;
+            background-color: #7c9885;
+            position: sticky;
+            /* Make header sticky */
+            top: 0;
+            z-index: 10000;
+            /* Ensure it stays above scrolling content (including map) */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        body.mobile-view-active .header img {
+            height: 80px !important;
+        }
+
+        body.mobile-view-active .header h1 {
+            font-size: 24px !important;
+        }
+
+        body.mobile-view-active .header span {
+            font-size: 10px !important;
+        }
+
+        body.mobile-view-active .btn-small {
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+        }
+
+        body.mobile-view-active #mobileViewToggle {
+            padding: 6px 8px !important;
+            font-size: 10px !important;
+        }
+
+        /* Mobile View - Resources Section */
+        body.mobile-view-active .section h2 {
+            font-size: 14px !important;
+            margin-bottom: 10px !important;
+        }
+
+        body.mobile-view-active #userResourcesSection {
+            margin-bottom: 12px !important;
+        }
+
+        body.mobile-view-active .resource-card {
+            padding: 12px !important;
+        }
+
+        body.mobile-view-active .resource-card h3 {
+            font-size: 13px !important;
+        }
+
+        body.mobile-view-active .resource-card p {
+            font-size: 11px !important;
+        }
+
+        /* Mobile View - Main Workspace */
+        body.mobile-view-active .main-workspace {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            flex: 1;
+            /* Allow workspace to grow */
+        }
+
+        body.mobile-view-active .form-section {
+            height: auto !important;
+            flex: 1;
+            /* Allow form section to grow */
+            padding-bottom: 40px !important;
+            /* Extra padding to prevent clipping */
+        }
+
+        body.mobile-view-active .map-section h2 {
+            font-size: 14px !important;
+            padding: 10px 12px !important;
+            margin-bottom: 10px !important;
+        }
+
+        body.mobile-view-active #emergencyMap {
+            overflow: hidden !important;
+            /* Prevent internal scrolling */
+            touch-action: none;
+            /* Prevent touch actions like scrolling specifically on map if needed */
+        }
+
+        body.mobile-view-active #userMap {
+            height: 250px !important;
+        }
+
+        /* Mobile View - Form Section */
+        body.mobile-view-active .form-section {
+            height: auto !important;
+            padding: 12px !important;
+            overflow-y: auto !important;
+            max-height: 500px !important;
+        }
+
+        body.mobile-view-active .form-section h2 {
+            font-size: 16px !important;
+            margin-bottom: 10px !important;
+        }
+
+        body.mobile-view-active .priority-display h3 {
+            font-size: 12px !important;
+        }
+
+        body.mobile-view-active .priority-badge {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+        }
+
+        body.mobile-view-active .confidence {
+            font-size: 10px !important;
+        }
+
+        body.mobile-view-active .form-group label {
+            font-size: 12px !important;
+        }
+
+        body.mobile-view-active .form-control {
+            font-size: 13px !important;
+            padding: 8px 10px !important;
+        }
+
+        body.mobile-view-active select.form-control {
+            height: auto !important;
+            font-size: 14px !important;
+        }
+
+        body.mobile-view-active textarea.form-control {
+            min-height: 60px !important;
+            max-height: 60px !important;
+        }
+
+        body.mobile-view-active .btn-primary {
+            height: 44px !important;
+            font-size: 14px !important;
+        }
+
+        .mobile-view-wrapper {
+            transition: all 0.3s ease;
         }
 
         /* AI Demand Section Styles */
@@ -1591,6 +1818,87 @@
                 </div>
             </div>
 
+            <!-- AI Demand Section (Collapsible) -->
+            <div id="aiDemandSection" class="weather-section" style="margin-bottom: 20px; display: none;">
+                <div class="weather-header" onclick="toggleAIDemand()">
+                    <h2><i class="fas fa-brain" style="color: #2b4c8c;"></i> AI Demand Forecasting</h2>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="sim-badge">SIM</span>
+                        <i id="aiDemandToggleIcon" class="fas fa-chevron-down" style="transition: transform 0.3s;"></i>
+                    </div>
+                </div>
+                <div id="aiDemandContent" class="weather-content">
+                    <div style="padding: 20px;">
+                        <!-- Demand Cards Grid -->
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+
+                            <!-- Beds Demand Card -->
+                            <div class="ai-demand-card">
+                                <div class="demand-header">
+                                    <i class="fas fa-bed"></i> Beds Demand
+                                </div>
+                                <div class="demand-value">
+                                    130 <span class="growth-badge">+15%</span>
+                                </div>
+                                <div class="demand-meta">
+                                    <span class="demand-confidence">Confidence: High</span><br>
+                                    <span class="analysis-text">Analysis: Cyclone season analysis + village population
+                                        density</span>
+                                </div>
+                            </div>
+
+                            <!-- Food Packages Demand Card -->
+                            <div class="ai-demand-card">
+                                <div class="demand-header">
+                                    <i class="fas fa-box-open"></i> Food Packages Demand
+                                </div>
+                                <div class="demand-value">
+                                    275 <span class="growth-badge" style="color: #10b981;">+23%</span>
+                                </div>
+                                <div class="demand-meta">
+                                    <span class="demand-confidence">Confidence: Very High</span><br>
+                                    <span class="analysis-text">Analysis: Tsunami risk assessment + coastal community
+                                        needs</span>
+                                </div>
+                            </div>
+
+                            <!-- Rescue Team Demand Card -->
+                            <div class="ai-demand-card">
+                                <div class="demand-header">
+                                    <i class="fas fa-users-cog"></i> Rescue Team Demand
+                                </div>
+                                <div class="demand-value">
+                                    4 <span class="growth-badge" style="color: #10b981;">+33%</span>
+                                </div>
+                                <div class="demand-meta">
+                                    <span class="demand-confidence">Confidence: Medium</span><br>
+                                    <span class="analysis-text">Analysis: Fisheries risk patterns + weather forecast
+                                        data</span>
+                                </div>
+                            </div>
+
+                            <!-- Agriculture Equipment Demand Card -->
+                            <div class="ai-demand-card">
+                                <div class="demand-header">
+                                    <i class="fas fa-tractor"></i> Agriculture Equipment Demand
+                                </div>
+                                <div class="demand-value">
+                                    12 <span class="growth-badge"
+                                        style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">+5%</span>
+                                </div>
+                                <div class="demand-meta">
+                                    <span class="demand-confidence">Confidence: Low</span><br>
+                                    <span class="analysis-text">Analysis: Seasonal crop cycles + flood damage
+                                        projection</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats Cards -->
             <div class="stats-grid" id="statsGrid" style="display: none;">
                 <div class="stat-card">
@@ -1639,74 +1947,7 @@
                     <div id="map"></div>
                 </div>
 
-                <!-- AI Demand Section (Replaces Form) -->
-                <div class="form-section"
-                    style="background: #fff; height: fit-content; max-height: 800px; overflow-y: auto;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-brain" style="color: #2b4c8c; font-size: 20px;"></i>
-                            <h2 style="margin: 0; color: #2d3748; font-size: 18px;">AI Demand</h2>
-                        </div>
-                        <span class="sim-badge">SIM</span>
-                    </div>
-
-                    <!-- Demand Cards -->
-                    <div class="ai-demand-card">
-                        <div class="demand-header">
-                            <i class="fas fa-bed"></i> Beds Demand
-                        </div>
-                        <div class="demand-value">
-                            130 <span class="growth-badge">+15%</span>
-                        </div>
-                        <div class="demand-meta">
-                            <span class="demand-confidence">Confidence: High</span><br>
-                            <span class="analysis-text">Analysis: Cyclone season analysis + village population
-                                density</span>
-                        </div>
-                    </div>
-
-                    <div class="ai-demand-card">
-                        <div class="demand-header">
-                            <i class="fas fa-box-open"></i> Food Packages Demand
-                        </div>
-                        <div class="demand-value">
-                            275 <span class="growth-badge" style="color: #10b981;">+23%</span>
-                        </div>
-                        <div class="demand-meta">
-                            <span class="demand-confidence">Confidence: Very High</span><br>
-                            <span class="analysis-text">Analysis: Tsunami risk assessment + coastal community
-                                needs</span>
-                        </div>
-                    </div>
-
-                    <div class="ai-demand-card">
-                        <div class="demand-header">
-                            <i class="fas fa-users-cog"></i> Rescue Team Demand
-                        </div>
-                        <div class="demand-value">
-                            4 <span class="growth-badge" style="color: #10b981;">+33%</span>
-                        </div>
-                        <div class="demand-meta">
-                            <span class="demand-confidence">Confidence: Medium</span><br>
-                            <span class="analysis-text">Analysis: Fisheries risk patterns + weather forecast data</span>
-                        </div>
-                    </div>
-
-                    <div class="ai-demand-card">
-                        <div class="demand-header">
-                            <i class="fas fa-tractor"></i> Agriculture Equipment Demand
-                        </div>
-                        <div class="demand-value">
-                            12 <span class="growth-badge"
-                                style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">+5%</span>
-                        </div>
-                        <div class="demand-meta">
-                            <span class="demand-confidence">Confidence: Low</span><br>
-                            <span class="analysis-text">Analysis: Seasonal crop cycles + flood damage projection</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- AI Demand Section has been moved below Weather Section -->
             </div>
 
             <!-- Active Requests -->
@@ -1831,6 +2072,10 @@
                 </div>
             </div>
             <div class="header-right">
+                <button class="btn btn-secondary btn-small" id="mobileViewToggle" onclick="toggleMobileView()"
+                    style="padding: 10px 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-mobile-alt"></i>
+                </button>
                 <div class="user-info">
                     <span id="userDashboardRole">User</span>
                 </div>
@@ -1839,27 +2084,35 @@
         </div>
 
         <div class="container">
-            <!-- User Resources Section (Moved to Top) -->
-            <div class="section" id="userResourcesSection" style="margin-bottom: 24px;">
-                <h2 style="margin-bottom: 20px;">Available Resources</h2>
-                <div class="resources-grid" id="userResourcesGrid"></div>
+            <!-- User Resources Section (Collapsible) -->
+            <div class="weather-section" id="userResourcesSection" style="margin-bottom: 20px; display: block;">
+                <div class="weather-header" onclick="toggleUserResources()">
+                    <h2><i class="fas fa-boxes"></i> Available Resources</h2>
+                    <i id="userResourcesToggleIcon" class="fas fa-chevron-down" style="transition: transform 0.3s;"></i>
+                </div>
+                <div id="userResourcesContent" class="weather-content">
+                    <div style="padding: 20px;">
+                        <div class="resources-grid" id="userResourcesGrid"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="main-workspace">
                 <!-- User Map Section -->
                 <div class="map-section">
                     <h2>Emergency Location Map</h2>
-                    <div id="userMap" style="height: 85vh; width: 100%;"></div>
+                    <div id="userMap" style="height: 92vh; width: 100%;"></div>
                 </div>
 
                 <!-- User Form Section -->
                 <div class="form-section">
                     <h2>Submit Emergency Request</h2>
-                    <div class="priority-display" id="userPriorityDisplay">
-                        <h3>Real-time ML Priority Analysis</h3>
-                        <div class="priority-info">
+                    <div class="priority-display" id="userPriorityDisplay"
+                        style="display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 12px; align-items: center;">
+                        <h3 style="margin: 0;">Real-time ML Priority Analysis</h3>
+                        <div class="confidence" id="userPriorityConfidence" style="margin: 0;">Confidence: 0%</div>
+                        <div style="grid-column: 1 / -1; display: flex; justify-content: center;">
                             <div class="priority-badge priority-low" id="userPriorityBadge">LOW</div>
-                            <div class="confidence" id="userPriorityConfidence">Confidence: 0%</div>
                         </div>
                     </div>
 
