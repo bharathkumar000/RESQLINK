@@ -1183,9 +1183,12 @@
         /* Mobile View - Form Section */
         body.mobile-view-active .form-section {
             height: auto !important;
-            padding: 12px !important;
-            overflow-y: auto !important;
-            max-height: 500px !important;
+            padding: 12px 12px 40px 12px !important;
+            /* Added bottom padding */
+            overflow-y: hidden !important;
+            /* Disable scrolling */
+            max-height: 650px !important;
+            /* Increased height to fit content */
         }
 
         body.mobile-view-active .form-section h2 {

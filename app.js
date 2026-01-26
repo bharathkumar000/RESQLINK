@@ -256,7 +256,7 @@ function initDashboard() {
         if (adminDashboard) adminDashboard.style.display = 'block';
         if (userDashboard) userDashboard.style.display = 'none';
 
-        initMap('map');
+        initMap('map', true); // Admin Map: Enable scroll zoom (website view)
         // initForm(); // Removed as Admin no longer has form
         renderRequests();
         renderResources();
@@ -294,7 +294,7 @@ function initDashboard() {
         if (adminDashboard) adminDashboard.style.display = 'none';
         if (userDashboard) userDashboard.style.display = 'block';
 
-        initMap('userMap');
+        initMap('userMap', false); // User/Mobile Map: Disable scroll zoom
         initUserForm();
         renderResources('userResourcesGrid');
 
@@ -420,12 +420,19 @@ function loadDummyData() {
     ];
 }
 
-function initMap(mapId = 'map') {
+function initMap(mapId = 'map', enableScrollZoom = true) {
     if (map) {
         map.remove();
         map = null;
     }
-    map = L.map(mapId).setView([BASE_LOCATION.lat, BASE_LOCATION.lng], 13);
+    map = L.map(mapId, {
+        scrollWheelZoom: enableScrollZoom,
+        zoomControl: true,
+        doubleClickZoom: true,
+        touchZoom: true,
+        boxZoom: true,
+        dragging: true
+    }).setView([BASE_LOCATION.lat, BASE_LOCATION.lng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -958,16 +965,17 @@ function toggleMobileView() {
     const toggleBtn = document.getElementById('mobileViewToggle');
     const icon = toggleBtn.querySelector('i');
 
-    if (body.classList.contains('mobile-view-active')) {
-        // Switch to desktop view
-        body.classList.remove('mobile-view-active');
-        icon.className = 'fas fa-mobile-alt';
-        localStorage.setItem('mobileViewActive', 'false');
-    } else {
-        // Switch to mobile view (6.9 inches diagonal = 440px width)
-        body.classList.add('mobile-view-active');
+    body.classList.toggle('mobile-view-active');
+    const isMobile = body.classList.contains('mobile-view-active');
+
+    if (isMobile) {
         icon.className = 'fas fa-desktop';
         localStorage.setItem('mobileViewActive', 'true');
+        if (map) map.scrollWheelZoom.disable();
+    } else {
+        icon.className = 'fas fa-mobile-alt';
+        localStorage.setItem('mobileViewActive', 'false');
+        if (map) map.scrollWheelZoom.enable();
     }
 }
 
