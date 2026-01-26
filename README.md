@@ -1,11 +1,19 @@
-# RESQLINK - Disaster Resource Management System
+# ResQ Link 🚨
+**A centralized Disaster Resource Management System bridging the gap between victims and response teams.**
 
-## Problem Faced
-Users were experiencing a "This site can't be reached" or "localhost refused to connect" error when trying to access the application on port 7070. This was caused because the Node.js server was not running, and the necessary dependencies (node_modules) were not installed.
+## The Problem
+Traditional disaster management fails due to **fragmentation, delayed responses, and lack of real-time data**. Victims struggle to request help, and resources are often misallocated during critical windows.
 
-## Solution
-to resolve this:
-1.  Missing dependencies were installed using `npm install`.
-2.  The server was started using `npm start` (which runs `node server.js`).
-3.  The application is now accessible at `http://localhost:7070`.
+## The Solution: ResQ Link
+ResQ Link optimizes disaster response through real-time coordination and AI-driven insights.
+*   **🗺️ Live Mapping**: Real-time tracking of emergencies and resources using Leaflet.js.
+*   **🤖 AI Forecasting**: Machine learning predicts resource demand spikes and categorizes urgency (Critical/High/Medium/Low).
+*   **📦 Smart Allocation**: Dynamic inventory tracking prevents resource wastage.
+*   **📱 Universal Access**: Responsive design with dedicated "Mobile View" for field operations.
 
+## Tech Stack
+**Node.js** (Http Server) | **HTML5/CSS3** (Glassmorphism UI) | **Vanilla JS** | **Leaflet.js**
+
+## Setup
+1.  `npm install`
+2.  `npm start` -> Access at `http://localhost:7070`
