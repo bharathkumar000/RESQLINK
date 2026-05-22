@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nearby_connections/nearby_connections.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'services/storage_service.dart';
 import 'services/wifi_service.dart';
 import 'screens/victim_screen.dart';
@@ -64,10 +65,16 @@ class _DashboardShellState extends State<DashboardShell> {
   }
 
   void _requestPermissions() async {
-    // Request permissions needed for nearby connections
-    await Nearby().askLocationPermission();
-    await Nearby().askExternalStoragePermission();
-    await Nearby().askBluetoothPermission();
+    // Request permissions needed for nearby connections (including newer Android 12/13 permissions)
+    await [
+      Permission.location,
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.bluetoothAdvertise,
+      Permission.nearbyWifiDevices,
+      Permission.storage,
+    ].request();
   }
 
   void _toggleMesh(bool enable) async {
