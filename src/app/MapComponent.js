@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-export default function MapComponent({ lat, lng, name, requests, volunteers, onMapClick, selectedLocation, routeCoordinates }) {
+export default function MapComponent({ lat, lng, name, requests, volunteers, onMapClick, selectedLocation, routeCoordinates, tacticalMode }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const baseMarkerRef = useRef(null);
   const selectedMarkerRef = useRef(null);
   const routePolylineRef = useRef(null);
+  const routeGlowRef = useRef(null);
+  const tileLayerRef = useRef(null);
 
+  // Initialize Map
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const L = require('leaflet');
@@ -30,10 +33,6 @@ export default function MapComponent({ lat, lng, name, requests, volunteers, onM
         boxZoom: true,
         dragging: true
       }).setView([lat, lng], 13);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(mapRef.current);
     } else if (mapRef.current) {
       // Avoid jarring jumps if user is interacting, but center on base if coords change significantly
       const currentCenter = mapRef.current.getCenter();
@@ -128,6 +127,26 @@ export default function MapComponent({ lat, lng, name, requests, volunteers, onM
     };
   }, [lat, lng, name, requests, volunteers, onMapClick]);
 
+  // Dynamic Map Theme based on Tactical Mode
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const L = require('leaflet');
+
+    if (tileLayerRef.current) {
+      tileLayerRef.current.remove();
+    }
+
+    const tileUrl = tacticalMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    const attribution = tacticalMode
+      ? '&copy; OpenStreetMap contributors &copy; CARTO'
+      : '&copy; OpenStreetMap contributors';
+
+    tileLayerRef.current = L.tileLayer(tileUrl, { attribution }).addTo(mapRef.current);
+  }, [tacticalMode]);
+
   // 7. Draw Selected Location Marker dynamically
   useEffect(() => {
     if (!mapRef.current) return;
@@ -157,12 +176,37 @@ export default function MapComponent({ lat, lng, name, requests, volunteers, onM
       routePolylineRef.current.remove();
       routePolylineRef.current = null;
     }
+    if (routeGlowRef.current) {
+      routeGlowRef.current.remove();
+      routeGlowRef.current = null;
+    }
 
     if (routeCoordinates && routeCoordinates.length > 0) {
-      routePolylineRef.current = L.polyline(routeCoordinates, { color: '#1a1a1a', weight: 5 }).addTo(map);
+      if (tacticalMode) {
+        // Neon green glow line underneath
+        routeGlowRef.current = L.polyline(routeCoordinates, {
+          color: '#39ff14',
+          weight: 12,
+          opacity: 0.3
+        }).addTo(map);
+
+        // Core bright neon green line
+        routePolylineRef.current = L.polyline(routeCoordinates, {
+          color: '#39ff14',
+          weight: 5,
+          opacity: 1.0
+        }).addTo(map);
+      } else {
+        // Standard blue route line
+        routePolylineRef.current = L.polyline(routeCoordinates, {
+          color: '#2563eb',
+          weight: 5,
+          opacity: 0.8
+        }).addTo(map);
+      }
       map.fitBounds(routePolylineRef.current.getBounds(), { padding: [50, 50] });
     }
-  }, [routeCoordinates]);
+  }, [routeCoordinates, tacticalMode]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row', height: '100%', width: '100%', borderRadius: '12px', overflow: 'hidden' }}>
