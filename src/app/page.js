@@ -1322,6 +1322,7 @@ export default function Home() {
                   onMapClick={handleMapClick}
                   selectedLocation={selectedLocation}
                   routeCoordinates={routeCoordinates}
+                  tacticalMode={tacticalMode}
                 />
               </div>
             </div>
@@ -1630,6 +1631,7 @@ export default function Home() {
                     onMapClick={handleMapClick}
                     selectedLocation={selectedLocation}
                     routeCoordinates={routeCoordinates}
+                    tacticalMode={tacticalMode}
                   />
                 </div>
               </div>
