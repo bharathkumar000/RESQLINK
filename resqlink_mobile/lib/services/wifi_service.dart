@@ -37,16 +37,6 @@ class WifiService {
   Future<bool> startMesh() async {
     await stopMesh();
 
-    // Check if location services are enabled, required for scanning/beacons
-    bool locationEnabled = await Nearby().checkLocationEnabled();
-    if (!locationEnabled) {
-      bool serviceGranted = await Nearby().enableLocationServices();
-      if (!serviceGranted) {
-        print('Location services not enabled by the user.');
-        return false;
-      }
-    }
-
     bool advStarted = await _startAdvertising();
     bool discStarted = await _startDiscovery();
     _updateStatus();
@@ -151,7 +141,7 @@ class WifiService {
     // Automatically accept incoming connection to keep the experience seamless
     Nearby().acceptConnection(
       endpointId,
-      onPayloadReceived: (id, payload) => _onPayloadReceived(endpointId, payload),
+      onPayLoadRecieved: (id, payload) => _onPayloadReceived(endpointId, payload),
       onPayloadTransferUpdate: (id, payloadTransferUpdate) {},
     );
   }
