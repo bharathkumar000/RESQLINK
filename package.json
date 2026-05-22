@@ -1,14 +1,23 @@
 {
-  "name": "resqlink",
-  "version": "1.0.0",
-  "description": "Disaster Resource Management System",
-  "main": "server.js",
+  "name": "resqlink-web",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "keywords": ["disaster", "management", "emergency"],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.1",
+    "firebase": "^12.13.0",
+    "leaflet": "^1.9.4",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6"
+  }
 }
