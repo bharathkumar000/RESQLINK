@@ -1970,6 +1970,7 @@
             </div>
         </div>
     </div>
+    </div>
 
     <!-- Admin Dashboard -->
     <div id="adminDashboard" class="dashboard" style="display: none;">
@@ -2129,7 +2130,10 @@
                     </div>
                 </div>
                 <div class="section" id="resourcesSection">
-                    <h2>Available Resources</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Available Resources</h2>
+                        <button class="btn btn-primary btn-small" id="addResourceBtn" style="display: none;">Add Resource</button>
+                    </div>
                     <div class="resources-grid" id="resourcesGrid"></div>
                 </div>
             </div>
@@ -2147,6 +2151,7 @@
                     <div class="analytics-card"><h3>Avg Priority</h3><div class="value" id="avgPriority">0.0</div></div>
                     <div class="analytics-card"><h3>People Helped</h3><div class="value" id="totalIndividuals">0</div></div>
                     <div class="analytics-card"><h3>Utilization</h3><div class="value" id="resourceUtilization">0%</div></div>
+                    <div class="analytics-card"><h3>Avg Response Time</h3><div class="value" id="avgResponseTime">N/A</div></div>
                 </div>
             </div>
 
@@ -2161,8 +2166,6 @@
                 </div>
             </div>
         </div>
-    </div>
-iv>
     </div>
 
     <!-- User Dashboard (Completely Separate) -->
@@ -2560,7 +2563,7 @@ iv>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 
 </html>

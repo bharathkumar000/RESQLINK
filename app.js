@@ -237,13 +237,19 @@ function checkSavedSession() {
     if (savedUser) {
         try {
             currentUser = JSON.parse(savedUser);
-            document.getElementById('authScreen').style.display = 'none';
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'none';
             // Dashboard display is handled in initDashboard
             const userRole = document.getElementById('userRole');
             if (userRole) userRole.textContent = currentUser.role;
             initDashboard();
         } catch (e) {
+            console.error('Session restore failed:', e);
             localStorage.removeItem('drmsCurrentUser');
+            currentUser = null;
+            // Show auth screen again if dashboard init failed
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'flex';
         }
     }
 }
@@ -439,62 +445,74 @@ async function logout() {
 }
 
 function initDashboard() {
-    loadDummyData();
+    try {
+        loadDummyData();
 
-    const adminDashboard = document.getElementById('adminDashboard');
-    const userDashboard = document.getElementById('userDashboard');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const userDashboard = document.getElementById('userDashboard');
 
-    if (currentUser.role === 'Admin') {
-        if (adminDashboard) adminDashboard.style.display = 'block';
-        if (userDashboard) userDashboard.style.display = 'none';
+        if (currentUser.role === 'Admin') {
+            if (adminDashboard) adminDashboard.style.display = 'block';
+            if (userDashboard) userDashboard.style.display = 'none';
 
-        initMap('map', true); // Admin Map: Enable scroll zoom (website view)
-        // initForm(); // Removed as Admin no longer has form
-        renderRequests();
-        renderResources();
-        updateStats();
-
-        const weatherSection = document.getElementById('weatherSection');
-        const aiDemandSection = document.getElementById('aiDemandSection');
-        const hardwareSection = document.getElementById('hardwareSection');
-        const statsGrid = document.getElementById('statsGrid');
-        const activeRequestsSection = document.getElementById('activeRequestsSection');
-        const resolvedRequestsSection = document.getElementById('resolvedRequestsSection');
-
-        if (weatherSection) weatherSection.style.display = 'block';
-        if (aiDemandSection) aiDemandSection.style.display = 'block';
-        if (hardwareSection) hardwareSection.style.display = 'block';
-        if (statsGrid) statsGrid.style.display = 'grid';
-        if (activeRequestsSection) activeRequestsSection.style.display = 'block';
-        if (resolvedRequestsSection) resolvedRequestsSection.style.display = 'block';
-
-        initSupabase();
-
-        const liveSheetSection = document.getElementById('liveSheetSection');
-        if (liveSheetSection) liveSheetSection.style.display = 'block';
-
-        initSheetRefresh();
-
-        document.getElementById('analyticsSection').style.display = 'block';
-        document.getElementById('addResourceBtn').style.display = 'block';
-        document.getElementById('addResourceBtn').addEventListener('click', openAddResourceModal);
-        updateAnalytics();
-
-        // Refresh active requests every 5 seconds
-        setInterval(() => {
+            initMap('map', true);
             renderRequests();
+            renderResources();
             updateStats();
-        }, 5000);
-    } else {
-        if (adminDashboard) adminDashboard.style.display = 'none';
-        if (userDashboard) userDashboard.style.display = 'block';
 
-        initMap('userMap', false); // User/Mobile Map: Disable scroll zoom
-        initUserForm();
-        renderResources('userResourcesGrid');
+            const weatherSection = document.getElementById('weatherSection');
+            const aiDemandSection = document.getElementById('aiDemandSection');
+            const hardwareSection = document.getElementById('hardwareSection');
+            const statsGrid = document.getElementById('statsGrid');
+            const activeRequestsSection = document.getElementById('activeRequestsSection');
+            const resolvedRequestsSection = document.getElementById('resolvedRequestsSection');
 
-        const userRoleSpan = document.getElementById('userDashboardRole');
-        if (userRoleSpan) userRoleSpan.textContent = currentUser.fullName || 'User';
+            if (weatherSection) weatherSection.style.display = 'block';
+            if (aiDemandSection) aiDemandSection.style.display = 'block';
+            if (hardwareSection) hardwareSection.style.display = 'block';
+            if (statsGrid) statsGrid.style.display = 'grid';
+            if (activeRequestsSection) activeRequestsSection.style.display = 'block';
+            if (resolvedRequestsSection) resolvedRequestsSection.style.display = 'block';
+
+            initSupabase();
+
+            const liveSheetSection = document.getElementById('liveSheetSection');
+            if (liveSheetSection) liveSheetSection.style.display = 'block';
+
+            initSheetRefresh();
+
+            const analyticsSection = document.getElementById('analyticsSection');
+            if (analyticsSection) analyticsSection.style.display = 'block';
+
+            const addResourceBtn = document.getElementById('addResourceBtn');
+            if (addResourceBtn) {
+                addResourceBtn.style.display = 'block';
+                addResourceBtn.addEventListener('click', openAddResourceModal);
+            }
+
+            updateAnalytics();
+
+            // Refresh active requests every 5 seconds
+            setInterval(() => {
+                renderRequests();
+                updateStats();
+            }, 5000);
+        } else {
+            if (adminDashboard) adminDashboard.style.display = 'none';
+            if (userDashboard) userDashboard.style.display = 'block';
+
+            initMap('userMap', false);
+            initUserForm();
+            renderResources('userResourcesGrid');
+
+            const userRoleSpan = document.getElementById('userDashboardRole');
+            if (userRoleSpan) userRoleSpan.textContent = currentUser.fullName || 'User';
+        }
+    } catch (err) {
+        console.error('Dashboard init error:', err);
+        // Ensure SOMETHING is visible - show auth screen as fallback
+        const authScreen = document.getElementById('authScreen');
+        if (authScreen) authScreen.style.display = 'flex';
     }
 }
 
