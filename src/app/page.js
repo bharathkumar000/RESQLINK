@@ -16,9 +16,9 @@ const DEFAULT_RESOURCES = [
   { id: 4, name: "Rescue Personnel", type: "Rescue Team", totalQuantity: 50, availableQuantity: 40 },
   { id: 5, name: "Emergency Ambulances", type: "Ambulance", totalQuantity: 20, availableQuantity: 15 },
   { id: 6, name: "Clean Drinking Water", type: "Food & Water", totalQuantity: 5000, availableQuantity: 3200 },
-  { id: 7, name: "Portable Power Generators", type: "Power Supply", totalQuantity: 50, availableQuantity: 35 },
-  { id: 8, name: "Blankets & Sleeping Bags", type: "Bedding", totalQuantity: 1500, availableQuantity: 1200 },
-  { id: 9, name: "Emergency Satellite Phones", type: "Communications", totalQuantity: 30, availableQuantity: 18 }
+  { id: 7, name: "Blankets & Sleeping Bags", type: "Bedding", totalQuantity: 1500, availableQuantity: 1200 },
+  { id: 8, name: "Inflatable Rescue Boats", type: "Rescue Boats", totalQuantity: 40, availableQuantity: 28 },
+  { id: 9, name: "Heavy Duty Excavators (JCB)", type: "Heavy Machinery", totalQuantity: 15, availableQuantity: 10 }
 ];
 
 const DEFAULT_VOLUNTEERS = [
@@ -321,17 +321,43 @@ export default function Home() {
     const savedMobile = localStorage.getItem('mobileViewActive') === 'true';
     setMobileView(savedMobile);
 
-    // Seed dummy requests with computed ML priority values
-    const seededRequests = DUMMY_REQUESTS.map(req => {
-      const mlResult = calculateMLPriority(req.resourceType, req.individualsAffected, req.severity);
-      return {
-        ...req,
-        priorityScore: mlResult.priorityScore,
-        mlPriorityClass: mlResult.priorityClass,
-        mlConfidence: mlResult.mlConfidence / 100
-      };
-    });
-    setRequests(seededRequests);
+    // Load requests from server, fallback to seeded DUMMY_REQUESTS if empty/fails
+    const loadRequests = async () => {
+      try {
+        const res = await fetch('/api/requests');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const mapped = data.map(req => {
+              const mlResult = calculateMLPriority(req.resourceType, req.individualsAffected, req.severity);
+              return {
+                ...req,
+                priorityScore: mlResult.priorityScore,
+                mlPriorityClass: mlResult.priorityClass,
+                mlConfidence: mlResult.mlConfidence / 100
+              };
+            });
+            setRequests(mapped);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load requests from server:", err);
+      }
+
+      const seededRequests = DUMMY_REQUESTS.map(req => {
+        const mlResult = calculateMLPriority(req.resourceType, req.individualsAffected, req.severity);
+        return {
+          ...req,
+          priorityScore: mlResult.priorityScore,
+          mlPriorityClass: mlResult.priorityClass,
+          mlConfidence: mlResult.mlConfidence / 100
+        };
+      });
+      setRequests(seededRequests);
+    };
+
+    loadRequests();
   }, []);
 
   // Sync Body CSS Styles
@@ -685,6 +711,13 @@ export default function Home() {
     setRequests(prev => [newRequest, ...prev]);
     setNextRequestId(prev => prev + 1);
 
+    // Save request to server DB persistently
+    fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRequest)
+    }).catch(err => console.error("Error saving request to server:", err));
+
     // Reset Form
     setUserResourceType('');
     setUserQuantity('');
@@ -731,6 +764,13 @@ export default function Home() {
 
     setRequests(prev => [newRequest, ...prev]);
     setNextRequestId(prev => prev + 1);
+
+    // Save request to server DB persistently
+    fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRequest)
+    }).catch(err => console.error("Error saving request to server:", err));
 
     // Reset Form
     setAdminResourceType('');
@@ -910,20 +950,31 @@ export default function Home() {
 
     setResources(prev => prev.map(r => r.type === allocateRequest.resourceType ? { ...r, availableQuantity: r.availableQuantity - qty } : r));
 
+    let updatedReq = null;
     setRequests(prev => prev.map(req => {
       if (req.id === allocateRequest.id) {
         const pending = req.quantityPending - qty;
         const allocated = (req.quantityAllocated || 0) + qty;
         const status = pending === 0 ? 'allocated' : 'partial';
-        return {
+        updatedReq = {
           ...req,
           quantityAllocated: allocated,
           quantityPending: pending,
           status
         };
+        return updatedReq;
       }
       return req;
     }));
+
+    // Update server DB persistently
+    if (updatedReq) {
+      fetch('/api/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedReq)
+      }).catch(err => console.error("Error saving allocation to server:", err));
+    }
 
     setShowAllocateModal(false);
     setAllocateRequest(null);
@@ -932,7 +983,23 @@ export default function Home() {
 
   const handleMarkResolved = (requestId) => {
     if (confirm("Verify request resolution and close incident file?")) {
-      setRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: 'resolved', resolvedAt: new Date().toISOString() } : req));
+      let updatedReq = null;
+      setRequests(prev => prev.map(req => {
+        if (req.id === requestId) {
+          updatedReq = { ...req, status: 'resolved', resolvedAt: new Date().toISOString() };
+          return updatedReq;
+        }
+        return req;
+      }));
+
+      // Update server DB persistently
+      if (updatedReq) {
+        fetch('/api/requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedReq)
+        }).catch(err => console.error("Error resolving request on server:", err));
+      }
     }
   };
 
@@ -1388,9 +1455,9 @@ export default function Home() {
                       <option value="Shelter">Shelter</option>
                       <option value="Rescue Team">Rescue Team</option>
                       <option value="Ambulance">Ambulance</option>
-                      <option value="Power Supply">Power Supply</option>
                       <option value="Bedding">Bedding</option>
-                      <option value="Communications">Communications</option>
+                      <option value="Rescue Boats">Rescue Boats</option>
+                      <option value="Heavy Machinery">Heavy Machinery</option>
                     </select>
                   </div>
 
@@ -1672,9 +1739,9 @@ export default function Home() {
                       <option value="Shelter">Shelter</option>
                       <option value="Rescue Team">Rescue Team</option>
                       <option value="Ambulance">Ambulance</option>
-                      <option value="Power Supply">Power Supply</option>
                       <option value="Bedding">Bedding</option>
-                      <option value="Communications">Communications</option>
+                      <option value="Rescue Boats">Rescue Boats</option>
+                      <option value="Heavy Machinery">Heavy Machinery</option>
                     </select>
                   </div>
 
@@ -1953,9 +2020,9 @@ export default function Home() {
                   <option value="Shelter">Shelter</option>
                   <option value="Rescue Team">Rescue Team</option>
                   <option value="Ambulance">Ambulance</option>
-                  <option value="Power Supply">Power Supply</option>
                   <option value="Bedding">Bedding</option>
-                  <option value="Communications">Communications</option>
+                  <option value="Rescue Boats">Rescue Boats</option>
+                  <option value="Heavy Machinery">Heavy Machinery</option>
                 </select>
               </div>
               <div className="form-group">
