@@ -75,4 +75,45 @@ class StorageService {
   static String getDeviceName() {
     return _settingsBox.get('deviceName', defaultValue: 'RescueNode');
   }
+
+  // Save server URL for HQ Sync Bridge
+  static Future<void> saveServerUrl(String url) async {
+    await _settingsBox.put('serverUrl', url);
+  }
+
+  // Get server URL (defaults to Mac local dev IP)
+  static String getServerUrl() {
+    return _settingsBox.get('serverUrl',
+        defaultValue: 'http://192.168.1.100:3000');
+  }
+
+  // Save login status
+  static Future<void> saveIsLoggedIn(bool value) async {
+    await _settingsBox.put('isLoggedIn', value);
+  }
+
+  // Get login status
+  static bool isLoggedIn() {
+    return _settingsBox.get('isLoggedIn', defaultValue: false);
+  }
+
+  // Save logged-in username
+  static Future<void> saveUsername(String username) async {
+    await _settingsBox.put('username', username);
+  }
+
+  // Get logged-in username
+  static String getUsername() {
+    return _settingsBox.get('username', defaultValue: '');
+  }
+
+  // Save admin status
+  static Future<void> saveIsAdmin(bool value) async {
+    await _settingsBox.put('isAdmin', value);
+  }
+
+  // Get admin status
+  static bool isAdmin() {
+    return _settingsBox.get('isAdmin', defaultValue: false);
+  }
 }
