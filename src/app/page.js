@@ -150,7 +150,109 @@ const TRANSLATIONS = {
     expertise: "Expertise",
     phone: "Phone Number",
     reg_vol: "Register as Volunteer",
-    avail_supplies: "Available Supplies"
+    avail_supplies: "Available Supplies",
+    normal_mode: "Normal Mode",
+    tactical_mode: "Tactical Mode",
+    total_req: "Total Requests",
+    active_req_short: "Active Requests",
+    resolved_req_short: "Resolved Requests",
+    critical_priority: "Critical Priority",
+    ai_assistant: "ResQLink AI Assistant",
+    gen_report: "Generate Situation Report",
+    ai_helper_text: "Click 'Generate Situation Report' to get an AI analysis of the current environment logs.",
+    analyzing_data: "Analyzing data...",
+    weather_forecast: "Weather Forecast",
+    loading_weather: "{t.loading_weather}",
+    command_map: "Emergency Command Map",
+    live_deployment: "LIVE DEPLOYMENT",
+    last_sync: "Last Sync",
+    city_name: "City Name",
+    weather_desc: "Weather Description",
+    feels_like: "Feels Like",
+    visibility: "Visibility",
+    cloudiness: "Cloudiness",
+    coordinates: "Coordinates",
+    timezone: "Timezone",
+    location_map: "Emergency Location Map",
+    submit_req_admin: "Submit Emergency Request (Admin)",
+    on_duty_vols: "On-Duty Volunteers",
+    sys_analytics: "System Analytics & Predictions",
+    resolved_history: "Resolved Requests History",
+    local_weather: "Local Weather",
+    live_sensor_data: "Live Sensor Data",
+    allocate_resources: "Allocate Resources",
+    route_info: "Route Info",
+    edit_resource: "Edit Resource",
+    add_resource: "Add Resource",
+    welcome_back: "Welcome Back",
+    login_sub: "Sign in to your account",
+    username: "Username",
+    password: "Password",
+    login_btn: "Login",
+    demo_btn: "Use Demo Admin Credentials",
+    dont_have_account: "{t.dont_have_account}",
+    disaster_mgmt: "Disaster Response Management System",
+    join_resq: "Join ResQ Link",
+    create_account_sub: "Create your account to get started",
+    account_security: "Account Security",
+    confirm_password: "Confirm Password",
+    retype_password: "Retype Password",
+    choose_username: "Choose a unique username",
+    min_chars: "Min 6 characters",
+    account_type: "Account Type",
+    standard_fn: "Standard Functionality",
+    sys_mgmt: "System Management",
+    create_account_btn: "{t.create_account_btn}",
+    already_have_account: "{t.already_have_account}",
+    type: "Type",
+    qty_short: "Qty",
+    location: "Location",
+    person: "Person",
+    phone_short: "Phone",
+    priority: "Priority",
+    status: "Status",
+    actions: "Actions",
+    id: "ID",
+    resolved_at: "Resolved At",
+    critical_first: "Critical First",
+    low_first: "Low Risk First",
+    purge: "Purge",
+    allocate: "Allocate",
+    resolve: "Resolve",
+    route: "Route",
+    ml_priority: "Real-time ML Priority",
+    confidence: "Confidence",
+    sos_hint: "One-click alert with your mobile GPS telemetry",
+    medical_first_aid: "Medical / First Aid",
+    rescue_search: "Rescue / Search",
+    driver_logistics: "Driver / Logistics",
+    general_assistance: "General Assistance",
+    weather_syncing: "Weather readings syncing...",
+    req_details: "Request Details",
+    qty_to_allocate: "Quantity to Allocate",
+    cancel: "Cancel",
+    distance: "Distance",
+    est_time: "Estimated Time",
+    severity_level: "Severity Level",
+    ok: "OK",
+    resource_name: "Resource Name",
+    total_qty: "Total Quantity",
+    avail_qty: "Available Quantity",
+    save: "Save",
+    pinned_target: "Pinned Target",
+    map_pin_required: "🚨 Map Target Pin Required",
+    dispatch: "{t.dispatch}",
+    exhaustion_forecast: "Inventory Exhaustion Forecast",
+    hrs_left: "hrs left",
+    burn_rate: "Burn Rate",
+    units_hr: "units/hr",
+    risk: "RISK",
+    avg_priority: "Avg Priority",
+    people_helped: "People Helped",
+    utilization: "Utilization",
+    avg_response_time: "Avg Response Time",
+    coords_locked: "Coords Locked",
+    pin_target_required: "🚨 Pinned target coords required (Click Map)"
   },
   kn: {
     title: "ರೆಸ್ಕ್ಯೂ ಲಿಂಕ್",
@@ -185,7 +287,109 @@ const TRANSLATIONS = {
     expertise: "ಪರಿಣತಿ",
     phone: "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
     reg_vol: "ಸ್ವಯಂಸೇವಕರಾಗಿ ನೋಂದಾಯಿಸಿ",
-    avail_supplies: "ಲಭ್ಯವಿರುವ ಸರಬರಾಜುಗಳು"
+    avail_supplies: "ಲಭ್ಯವಿರುವ ಸರಬರಾಜುಗಳು",
+    normal_mode: "ಸಾಮಾನ್ಯ ಮೋಡ್",
+    tactical_mode: "ಯುದ್ಧತಂತ್ರದ ಮೋಡ್",
+    total_req: "ಒಟ್ಟು ವಿನಂತಿಗಳು",
+    active_req_short: "ಸಕ್ರಿಯ ವಿನಂತಿಗಳು",
+    resolved_req_short: "ಪರಿಹರಿಸಲಾದ ವಿನಂತಿಗಳು",
+    critical_priority: "ಗಂಭೀರ ಆದ್ಯತೆ",
+    ai_assistant: "ರೆಸ್ಕ್ಯೂಲಿಂಕ್ AI ಸಹಾಯಕಿ",
+    gen_report: "ಪರಿಸ್ಥಿತಿ ವರದಿ ರಚಿಸಿ",
+    ai_helper_text: "ಪ್ರಸ್ತುತ ಪರಿಸರದ ಲಾಗ್‌ಗಳ AI ವಿಶ್ಲೇಷಣೆಯನ್ನು ಪಡೆಯಲು 'ಪರಿಸ್ಥಿತಿ ವರದಿ ರಚಿಸಿ' ಕ್ಲಿಕ್ ಮಾಡಿ.",
+    analyzing_data: "ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...",
+    weather_forecast: "ಹವಾಮಾನ ಮುನ್ಸೂಚನೆ",
+    loading_weather: "ಹವಾಮಾನ ವಿವರಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+    command_map: "ತುರ್ತು ನಿಯಂತ್ರಣ ನಕ್ಷೆ",
+    live_deployment: "ಲೈವ್ ನಿಯೋಜನೆ",
+    last_sync: "ಕೊನೆಯ ಸಿಂಕ್",
+    city_name: "ನಗರದ ಹೆಸರು",
+    weather_desc: "ಹವಾಮಾನ ವಿವರಣೆ",
+    feels_like: "ಹಾಗೆ ಭಾಸವಾಗುತ್ತದೆ",
+    visibility: "ಗೋಚರತೆ",
+    cloudiness: "ಮೋಡ ಕವಿದ ವಾತಾವರಣ",
+    coordinates: "ನಿರ್ದೇಶಾಂಕಗಳು",
+    timezone: "ಸಮಯ ವಲಯ",
+    location_map: "ತುರ್ತು ಸ್ಥಳ ನಕ್ಷೆ",
+    submit_req_admin: "ತುರ್ತು ವಿನಂತಿ ಸಲ್ಲಿಸಿ (ನಿರ್ವಾಹಕರು)",
+    on_duty_vols: "ಕರ್ತವ್ಯದಲ್ಲಿರುವ ಸ್ವಯಂಸೇವಕರು",
+    sys_analytics: "ವ್ಯವಸ್ಥೆ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಮುನ್ಸೂಚನೆಗಳು",
+    resolved_history: "ಪರಿಹರಿಸಲಾದ ವಿನಂತಿಗಳ ಇತಿಹಾಸ",
+    local_weather: "ಸ್ಥಳೀಯ ಹವಾಮಾನ",
+    live_sensor_data: "ಲೈವ್ ಸೆನ್ಸರ್ ಡೇಟಾ",
+    allocate_resources: "ಸಂಪನ್ಮೂಲಗಳನ್ನು ಹಂಚಿಕೆ ಮಾಡಿ",
+    route_info: "ಮಾರ್ಗ ಮಾಹಿತಿ",
+    edit_resource: "ಸಂಪನ್ಮೂಲವನ್ನು ಸಂಪಾದಿಸಿ",
+    add_resource: "ಸಂಪನ್ಮೂಲವನ್ನು ಸೇರಿಸಿ",
+    welcome_back: "ಪುನಃ ಸುಸ್ವಾಗತ",
+    login_sub: "ನಿಮ್ಮ ಖಾತೆಗೆ ಲಾಗಿನ್ ಮಾಡಿ",
+    username: "ಬಳಕೆದಾರ ಹೆಸರು",
+    password: "ಗುಪ್ತಪದ",
+    login_btn: "ಲಾಗಿನ್",
+    demo_btn: "ಡೆಮೊ ನಿರ್ವಾಹಕ ರುಜುವಾತುಗಳನ್ನು ಬಳಸಿ",
+    dont_have_account: "ಖಾತೆ ಇಲ್ಲವೇ? ಹೊಸದನ್ನು ರಚಿಸಿ",
+    disaster_mgmt: "ವಿಪತ್ತು ಪ್ರತಿಕ್ರಿಯೆ ನಿರ್ವಹಣಾ ವ್ಯವಸ್ಥೆ",
+    join_resq: "ರೆಸ್ಕ್ಯೂ ಲಿಂಕ್ ಸೇರಿ",
+    create_account_sub: "ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಖಾತೆಯನ್ನು ರಚಿಸಿ",
+    account_security: "ಖಾತೆ ಭದ್ರತೆ",
+    confirm_password: "ದೃಢೀಕರಿಸಿ",
+    retype_password: "ಗುಪ್ತಪದವನ್ನು ಮರುಟೈಪ್ ಮಾಡಿ",
+    choose_username: "ವಿಶಿಷ್ಟ ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಆರಿಸಿ",
+    min_chars: "ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳು",
+    account_type: "ಖಾತೆಯ ಪ್ರಕಾರ",
+    standard_fn: "ಸಾಮಾನ್ಯ ಕಾರ್ಯಶೀಲತೆ",
+    sys_mgmt: "ಸಿಸ್ಟಮ್ ನಿರ್ವಹಣೆ",
+    create_account_btn: "ಖಾತೆ ರಚಿಸಿ",
+    already_have_account: "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ? ಲಾಗಿನ್ ಮಾಡಿ",
+    type: "ಪ್ರಕಾರ",
+    qty_short: "ಪ್ರಮಾಣ",
+    location: "ಸ್ಥಳ",
+    person: "ಸಂಪರ್ಕ ವ್ಯಕ್ತಿ",
+    phone_short: "ಫೋನ್",
+    priority: "ಆದ್ಯತೆ",
+    status: "ಸ್ಥಿತಿ",
+    actions: "ಕ್ರಮಗಳು",
+    id: "ಐಡಿ",
+    resolved_at: "ಪರಿಹರಿಸಲಾದ ಸಮಯ",
+    critical_first: "ಗಂಭೀರ ಮೊದಲು",
+    low_first: "ಕಡಿಮೆ ಆದ್ಯತೆ ಮೊದಲು",
+    purge: "ಅಳಿಸಿ",
+    allocate: "ಹಂಚಿಕೆ",
+    resolve: "ಪರಿಹರಿಸಿ",
+    route: "ಮಾರ್ಗ",
+    ml_priority: "ನೈಜ-ಸಮಯದ ML ಆದ್ಯತೆ",
+    confidence: "ವಿಶ್ವಾಸಾರ್ಹತೆ",
+    sos_hint: "ನಿಮ್ಮ ಮೊಬೈಲ್ ಜಿಪಿಎಸ್ ಟೆಲಿಮೆಟ್ರಿಯೊಂದಿಗೆ ಒಂದೇ ಕ್ಲಿಕ್‌ನಲ್ಲಿ ಎಚ್ಚರಿಕೆ",
+    medical_first_aid: "ವೈದ್ಯಕೀಯ / ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ",
+    rescue_search: "ರಕ್ಷಣೆ / ಹುಡುಕಾಟ",
+    driver_logistics: "ಚಾಲಕ / ಲಾಜಿಸ್ಟಿಕ್ಸ್",
+    general_assistance: "ಸಾಮಾನ್ಯ ಸಹಾಯ",
+    weather_syncing: "ಹವಾಮಾನ ವಿವರಗಳು ಸಿಂಕ್ ಆಗುತ್ತಿವೆ...",
+    req_details: "ವಿನಂತಿಯ ವಿವರಗಳು",
+    qty_to_allocate: "ಹಂಚಿಕೆ ಮಾಡಬೇಕಾದ ಪ್ರಮಾಣ",
+    cancel: "ರದ್ದುಮಾಡಿ",
+    distance: "ದೂರ",
+    est_time: "ಅಂದಾಜು ಸಮಯ",
+    severity_level: "ತೀವ್ರತೆಯ ಮಟ್ಟ",
+    ok: "ಸರಿ",
+    resource_name: "ಸಂಪನ್ಮೂಲ ಹೆಸರು",
+    total_qty: "ಒಟ್ಟು ಪ್ರಮಾಣ",
+    avail_qty: "ಲಭ್ಯವಿರುವ ಪ್ರಮಾಣ",
+    save: "ಉಳಿಸಿ",
+    pinned_target: "ಪಿನ್ ಮಾಡಿದ ಗುರಿ",
+    map_pin_required: "🚨 ನಕ್ಷೆಯಲ್ಲಿ ಗುರಿ ಗುರುತಿಸುವುದು ಅಗತ್ಯ",
+    dispatch: "ನಿಯೋಜಿಸು",
+    exhaustion_forecast: "ದಾಸ್ತಾನು ಖಾಲಿಯಾಗುವ ಮುನ್ಸೂಚನೆ",
+    hrs_left: "ಗಂಟೆಗಳು ಬಾಕಿ",
+    burn_rate: "ಬಳಕೆಯ ದರ",
+    units_hr: "ಘಟಕಗಳು/ಗಂಟೆ",
+    risk: "ಅಪಾಯ",
+    avg_priority: "ಸರಾಸರಿ ಆದ್ಯತೆ",
+    people_helped: "ಸಹಾಯ ಪಡೆದ ಜನರು",
+    utilization: "ಬಳಕೆ ದರ",
+    avg_response_time: "ಸರಾಸರಿ ಪ್ರತಿಕ್ರಿಯೆ ಸಮಯ",
+    coords_locked: "ನಿರ್ದೇಶಾಂಕಗಳನ್ನು ಲಾಕ್ ಮಾಡಲಾಗಿದೆ",
+    pin_target_required: "🚨 ಪಿನ್ ಮಾಡಿದ ಗುರಿಯ ನಿರ್ದೇಶಾಂಕಗಳು ಅಗತ್ಯವಿದೆ (ನಕ್ಷೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ)"
   }
 };
 
@@ -259,7 +463,7 @@ export default function Home() {
   const [isUserResourcesExpanded, setIsUserResourcesExpanded] = useState(false);
 
   // AI Assistant State
-  const [aiSummaryOutput, setAiSummaryOutput] = useState("Click 'Generate Situation Report' to get an AI analysis of the current environment logs.");
+  const [aiSummaryOutput, setAiSummaryOutput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   // Sort Risk Level
@@ -1105,7 +1309,7 @@ export default function Home() {
                     <p>Login to your account</p>
                     <form onSubmit={handleLoginSubmit}>
                       <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="username">{t.username}</label>
                         <input
                           type="text"
                           id="username"
@@ -1116,7 +1320,7 @@ export default function Home() {
                         />
                       </div>
                       <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                        <label htmlFor="password">{t.password}</label>
                         <div style={{ position: 'relative' }}>
                           <input
                             type="password"
@@ -1151,7 +1355,7 @@ export default function Home() {
                 ) : (
                   <div className="login-card" id="registerFormCard">
                     <h1>Join ResQ Link</h1>
-                    <p>Create your account to get started</p>
+                    <p>{t.create_account_sub}</p>
                     <form onSubmit={handleRegisterSubmit}>
                       <div className="form-section-title">Account Security</div>
                       <div className="form-group">
@@ -1251,7 +1455,7 @@ export default function Home() {
                 style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: tacticalMode ? '#900' : '#333', color: tacticalMode ? '#fff' : '#00ff88', border: '1px solid #444' }}
               >
                 <i className={tacticalMode ? "fas fa-eye-slash" : "fas fa-eye"}></i>
-                <span>{tacticalMode ? 'Normal Mode' : 'Tactical Mode'}</span>
+                <span>{tacticalMode ? t.normal_mode : t.tactical_mode}</span>
               </button>
               <button
                 className="btn btn-secondary btn-small"
@@ -1377,8 +1581,8 @@ export default function Home() {
             {/* Map Workstation Section */}
             <div className="section" style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h2 style={{ margin: 0 }}><i className="fas fa-map-location-dot"></i> Emergency Command Map</h2>
-                <span className="status-badge status-pending">LIVE DEPLOYMENT</span>
+                <h2 style={{ margin: 0 }}><i className="fas fa-map-location-dot"></i> {t.command_map}</h2>
+                <span className="status-badge status-pending">{t.live_deployment}</span>
               </div>
               <div style={{ height: '500px', width: '100%', border: '1px solid #ddd', overflow: 'hidden', borderRadius: '12px' }}>
                 <MapComponent
@@ -1402,14 +1606,14 @@ export default function Home() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                   <h2>{t.active_req}</h2>
                   <select id="riskSort" className="form-control" style={{ width: 'auto' }} value={riskSort} onChange={(e) => setRiskSort(e.target.value)}>
-                    <option value="critical">Critical First</option>
-                    <option value="low">Low Risk First</option>
+                    <option value="critical">{t.critical_first}</option>
+                    <option value="low">{t.low_first}</option>
                   </select>
                 </div>
                 <div className="table-container">
                   <table>
                     <thead>
-                      <tr><th>Type</th><th>Qty</th><th>Location</th><th>Person</th><th>Phone</th><th>Priority</th><th>Status</th><th>Actions</th></tr>
+                      <tr><th>{t.type}</th><th>{t.qty_short}</th><th>{t.location}</th><th>{t.person}</th><th>{t.phone_short}</th><th>{t.priority}</th><th>{t.status}</th><th>{t.actions}</th></tr>
                     </thead>
                     <tbody id="activeRequestsTable">
                       {sortedRequests.active.map(req => (
@@ -1423,9 +1627,9 @@ export default function Home() {
                           <td><span className={`status-badge status-${req.status}`}>{req.status.toUpperCase()}</span></td>
                           <td>
                             <div className="btn-group">
-                              <button className="btn btn-secondary btn-small" onClick={() => handleShowRoute(req)}>Route</button>
-                              {req.status !== 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleAllocateOpen(req)}>Allocate</button>}
-                              {req.status === 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleMarkResolved(req.id)}>Resolve</button>}
+                              <button className="btn btn-secondary btn-small" onClick={() => handleShowRoute(req)}>{t.route}</button>
+                              {req.status !== 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleAllocateOpen(req)}>{t.allocate}</button>}
+                              {req.status === 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleMarkResolved(req.id)}>{t.resolve}</button>}
                             </div>
                           </td>
                         </tr>
@@ -1437,10 +1641,10 @@ export default function Home() {
 
               {/* Submit Emergency Request Form (Admin Side) */}
               <div className="form-section" style={{ height: 'auto' }}>
-                <h2>Submit Emergency Request (Admin)</h2>
+                <h2>{t.submit_req_admin}</h2>
                 <div className="priority-display" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gridTemplateRows: 'auto auto', gap: '0px', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0 }}>Real-time ML Priority</h3>
-                  <div className="confidence">Confidence: {adminPriorityResult.mlConfidence}%</div>
+                  <h3>{t.ml_priority}</h3>
+                  <div className="confidence">{t.confidence}: {adminPriorityResult.mlConfidence}%</div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
                     <div className={`priority-badge priority-${adminPriorityResult.priorityClass}`}>{adminPriorityResult.priorityClass.toUpperCase()}</div>
                   </div>
@@ -1450,7 +1654,7 @@ export default function Home() {
                   <div className="form-group">
                     <label style={{ fontSize: '16px' }}>{t.res_type}</label>
                     <select className="form-control" style={{ height: '50px', fontSize: '15px' }} required value={adminResourceType} onChange={(e) => setAdminResourceType(e.target.value)}>
-                      <option value="">Select Resource</option>
+                      <option value="">{t.select_resource}</option>
                       <option value="Medical Supplies">Medical Supplies</option>
                       <option value="Food & Water">Food &amp; Water</option>
                       <option value="Shelter">Shelter</option>
@@ -1480,11 +1684,11 @@ export default function Home() {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Contact Person</label>
+                      <label>{t.person}</label>
                       <input type="text" className="form-control" required value={adminContact} onChange={(e) => setAdminContact(e.target.value)} />
                     </div>
                     <div className="form-group">
-                      <label>Contact Phone</label>
+                      <label>{t.phone}</label>
                       <input type="text" className="form-control" required value={adminPhone} onChange={(e) => setAdminPhone(e.target.value)} />
                     </div>
                   </div>
@@ -1495,7 +1699,7 @@ export default function Home() {
                   </div>
 
                   <div style={{ fontSize: '12px', margin: '5px 0 10px', color: '#666' }}>
-                    {selectedLocation ? `Pinned Target: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}` : '🚨 Map Target Pin Required'}
+                    {selectedLocation ? `${t.pinned_target}: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}` : t.map_pin_required}
                   </div>
 
                   <button type="submit" className="btn btn-primary" style={{ height: '60px', fontSize: '18px', fontWeight: 'bold' }}>
@@ -1508,11 +1712,11 @@ export default function Home() {
             {/* Volunteer Dispatch Grid */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px', marginTop: '24px' }}>
               <div className="section" id="volunteerManagementSection">
-                <h2>On-Duty Volunteers</h2>
+                <h2>{t.on_duty_vols}</h2>
                 <div className="table-container">
                   <table>
                     <thead>
-                      <tr><th>Name</th><th>Role</th><th>Status</th><th>Phone</th><th>Actions</th></tr>
+                      <tr><th>{t.name}</th><th>{t.role}</th><th>{t.status}</th><th>{t.phone}</th><th>{t.actions}</th></tr>
                     </thead>
                     <tbody id="volunteerTable">
                       {volunteers.map(v => (
@@ -1537,7 +1741,7 @@ export default function Home() {
               <div className="section" id="resourcesSection">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h2 style={{ margin: 0 }}>Available Resources</h2>
-                  <button className="btn btn-primary btn-small" style={{ display: 'block' }} onClick={() => handleResourceOpen()}>Add Resource</button>
+                  <button className="btn btn-primary btn-small" style={{ display: 'block' }} onClick={() => handleResourceOpen()}>{t.add_resource}</button>
                 </div>
                 <div className="resources-grid" id="resourcesGrid">
                   {resources.map(res => {
@@ -1552,7 +1756,7 @@ export default function Home() {
                           <div className="progress" style={{ width: `${pct}%`, background: pct < 20 ? '#ef4444' : (pct < 50 ? '#f97316' : '#10b981') }}></div>
                         </div>
                         <div style={{ fontSize: '11px', marginTop: '5px', color: '#666', textAlign: 'right' }}>
-                          Type: {res.type}
+                          {t.type}: {res.type}
                         </div>
                       </div>
                     );
@@ -1563,10 +1767,10 @@ export default function Home() {
 
             {/* Inventory Exhaustion Forecast and analytics */}
             <div className="section" id="analyticsSection" style={{ display: 'block' }}>
-              <h2>System Analytics & Predictions</h2>
+              <h2>{t.sys_analytics}</h2>
               <div className="ai-demand-section" style={{ marginBottom: '20px' }}>
                 <div className="ai-demand-header">
-                  <h3><i className="fas fa-hourglass-half"></i> Inventory Exhaustion Forecast</h3>
+                  <h3><i className="fas fa-hourglass-half"></i> {t.exhaustion_forecast}</h3>
                 </div>
                 <div className="ai-demand-grid" id="forecastingGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                   {forecasts.map(f => (
@@ -1582,30 +1786,30 @@ export default function Home() {
                       minHeight: '120px'
                     }}>
                       <div style={{ fontWeight: '700', marginBottom: '5px' }}><i className="fas fa-hourglass-half"></i> {f.name}</div>
-                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.hoursLeft} <span style={{ fontSize: '14px' }}>hrs left</span></div>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.hoursLeft} <span style={{ fontSize: '14px' }}>{t.hrs_left}</span></div>
                       <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                        Burn Rate: ~{f.hourlyRate} units/hr<br />
-                        <span className={`status-badge status-${f.riskStatus}`}>{f.riskStatus.toUpperCase()} RISK</span>
+                        {t.burn_rate}: ~{f.hourlyRate} {t.units_hr}<br />
+                        <span className={`status-badge status-${f.riskStatus}`}>{f.riskStatus.toUpperCase()} {t.risk}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="analytics-grid">
-                <div className="analytics-card"><h3>Avg Priority</h3><div className="value" id="avgPriority">{avgPriority}</div></div>
-                <div className="analytics-card"><h3>People Helped</h3><div className="value" id="totalIndividuals">{peopleHelped}</div></div>
-                <div className="analytics-card"><h3>Utilization</h3><div className="value" id="resourceUtilization">{resourceUtilization}%</div></div>
-                <div className="analytics-card"><h3>Avg Response Time</h3><div className="value" id="avgResponseTime">N/A</div></div>
+                <div className="analytics-card"><h3>{t.avg_priority}</h3><div className="value" id="avgPriority">{avgPriority}</div></div>
+                <div className="analytics-card"><h3>{t.people_helped}</h3><div className="value" id="totalIndividuals">{peopleHelped}</div></div>
+                <div className="analytics-card"><h3>{t.utilization}</h3><div className="value" id="resourceUtilization">{resourceUtilization}%</div></div>
+                <div className="analytics-card"><h3>{t.avg_response_time}</h3><div className="value" id="avgResponseTime">N/A</div></div>
               </div>
             </div>
 
             {/* Resolved requests */}
             <div className="section" id="resolvedRequestsSection" style={{ opacity: 0.8, display: 'block' }}>
-              <h2>Resolved Requests History</h2>
+              <h2>{t.resolved_history}</h2>
               <div className="table-container">
                 <table style={{ fontSize: '13px' }}>
                   <thead>
-                    <tr><th>ID</th><th>Type</th><th>Location</th><th>Person</th><th>Phone</th><th>Description</th><th>Priority</th><th>Resolved At</th><th>Actions</th></tr>
+                    <tr><th>{t.id}</th><th>{t.type}</th><th>{t.location}</th><th>{t.person}</th><th>{t.phone_short}</th><th>{t.desc}</th><th>{t.priority}</th><th>{t.resolved_at}</th><th>{t.actions}</th></tr>
                   </thead>
                   <tbody>
                     {sortedRequests.resolved.map(req => (
@@ -1622,7 +1826,7 @@ export default function Home() {
                         <td>{new Date(req.resolvedAt).toLocaleString()}</td>
                         <td>
                           <div className="btn-group">
-                            <button className="btn btn-secondary btn-small" onClick={() => handleDeleteRequest(req.id)}>Purge</button>
+                            <button className="btn btn-secondary btn-small" onClick={() => handleDeleteRequest(req.id)}>{t.purge}</button>
                           </div>
                         </td>
                       </tr>
@@ -1688,7 +1892,7 @@ export default function Home() {
               
               {/* User map coordinate picker */}
               <div className="map-section">
-                <h2><i className="fas fa-map-marked-alt"></i> Emergency Location Map</h2>
+                <h2><i className="fas fa-map-marked-alt"></i> {t.location_map}</h2>
                 <div style={{ height: '500px', width: '100%', border: '1px solid #ddd', borderRadius: '12px', overflow: 'hidden' }}>
                   <MapComponent
                     lat={currentBaseLocation.lat}
@@ -1714,7 +1918,7 @@ export default function Home() {
                     <span>{t.sos_btn}</span>
                   </button>
                   <div className="sos-label">{t.sos_label}</div>
-                  <div className="sos-hint">One-click alert with your mobile GPS telemetry</div>
+                  <div className="sos-hint">{t.sos_hint}</div>
                 </div>
 
                 <h2>{t.submit_req}</h2>
@@ -1722,7 +1926,7 @@ export default function Home() {
                 {/* Dynamic ML Score Box */}
                 <div className="priority-display" id="userPriorityDisplay" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gridTemplateRows: 'auto auto', gap: '0px', alignItems: 'center' }}>
                   <h3 style={{ margin: 0 }}>Real-time ML Priority</h3>
-                  <div className="confidence" id="userPriorityConfidence">Confidence: {userPriorityResult.mlConfidence}%</div>
+                  <div className="confidence" id="userPriorityConfidence">{t.confidence}: {userPriorityResult.mlConfidence}%</div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
                     <div className={`priority-badge priority-${userPriorityResult.priorityClass}`} id="userPriorityBadge">
                       {userPriorityResult.priorityClass.toUpperCase()}
@@ -1768,7 +1972,7 @@ export default function Home() {
                   </div>
 
                   <div style={{ fontSize: '12px', margin: '5px 0 10px', color: '#666' }}>
-                    {selectedLocation ? `Coords Locked: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}` : '🚨 Pinned target coords required (Click Map)'}
+                    {selectedLocation ? `${t.coords_locked}: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}` : t.pin_target_required}
                   </div>
 
                   <button type="submit" className="btn btn-primary" style={{ height: '60px', fontSize: '18px', fontWeight: 'bold' }}>
@@ -1785,7 +1989,7 @@ export default function Home() {
               {/* Weather info */}
               <div className="weather-section" id="userWeatherSection">
                 <div className="weather-header" onClick={() => setIsWeatherExpanded(prev => !prev)}>
-                  <h2><i className="fas fa-cloud-sun"></i> Local Weather</h2>
+                  <h2><i className="fas fa-cloud-sun"></i> {t.local_weather}</h2>
                   <i className="fas fa-chevron-down" style={{ transform: isWeatherExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
                 </div>
                 <div className={`weather-content ${isWeatherExpanded ? 'expanded' : ''}`}>
@@ -1799,7 +2003,7 @@ export default function Home() {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '15px', color: '#666' }}>Weather readings syncing...</div>
+                    <div style={{ textAlign: 'center', padding: '15px', color: '#666' }}>{t.weather_syncing}</div>
                   )}
                 </div>
               </div>
@@ -1807,7 +2011,7 @@ export default function Home() {
               {/* Hardware Sensors */}
               <div className="weather-section" id="userHardwareSection">
                 <div className="weather-header" onClick={() => setIsHardwareExpanded(prev => !prev)}>
-                  <h2><i className="fas fa-microchip"></i> Live Sensor Data</h2>
+                  <h2><i className="fas fa-microchip"></i> {t.live_sensor_data}</h2>
                   <i className="fas fa-chevron-down" style={{ transform: isHardwareExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
                 </div>
                 <div className={`weather-content ${isHardwareExpanded ? 'expanded' : ''}`}>
@@ -1913,7 +2117,7 @@ export default function Home() {
         <div id="allocateModal" className="modal" style={{ display: 'flex' }}>
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
-              <h2>Allocate Resources</h2>
+              <h2>{t.allocate_resources}</h2>
               <button className="btn-close" onClick={() => { setShowAllocateModal(false); setAllocateRequest(null); }}>&times;</button>
             </div>
             <div style={{ background: 'var(--color-surface)', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--color-border)' }}>
@@ -1934,7 +2138,7 @@ export default function Home() {
             </div>
             <form onSubmit={handleAllocateSubmit}>
               <div className="form-group">
-                <label>Quantity to Allocate</label>
+                <label>{t.qty_to_allocate}</label>
                 <input
                   type="number"
                   className="form-control"
@@ -1991,7 +2195,7 @@ export default function Home() {
         <div id="resourceModal" className="modal" style={{ display: 'flex' }}>
           <div className="modal-content">
             <div className="modal-header">
-              <h2>{resourceModalData.id ? 'Edit Resource' : 'Add Resource'}</h2>
+              <h2>{resourceModalData.id ? t.edit_resource : t.add_resource}</h2>
               <button className="btn-close" onClick={() => setShowResourceModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleResourceSave}>
