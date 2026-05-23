@@ -84,7 +84,7 @@ class StorageService {
   // Get server URL (defaults to Mac local dev IP)
   static String getServerUrl() {
     return _settingsBox.get('serverUrl',
-        defaultValue: 'http://192.168.1.100:3000');
+        defaultValue: 'http://172.20.10.2:3000');
   }
 
   // Save login status

@@ -120,7 +120,7 @@ const TRANSLATIONS = {
   en: {
     title: "ResQ Link",
     base: "Base: Mandya Emergency Operations Center (MIMS)",
-    hw_title: "Live Hardware Monitoring (Supabase)",
+    hw_title: "Live Hardware Monitoring ",
     temp: "Temperature",
     hum: "Humidity",
     soil: "Soil Moisture",
@@ -1524,25 +1524,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* AI Assistant situational brief */}
-            <div id="aiAssistantSection" className="weather-section" style={{ marginBottom: '24px', border: '2px solid var(--color-primary)', display: 'block' }}>
-              <div className="weather-header" style={{ background: 'linear-gradient(90deg, var(--color-darkest) 0%, var(--color-primary) 100%)', color: 'white' }}>
-                <h2 style={{ color: 'white' }}><i className="fas fa-robot"></i> {t.ai_assistant}</h2>
-                <button className="btn btn-secondary btn-small" onClick={getAISummary} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white' }} disabled={isAiLoading}>
-                  <i className="fas fa-sync-alt"></i> {isAiLoading ? t.analyzing_data : t.gen_report}
-                </button>
-              </div>
-              <div style={{ padding: '20px', background: 'rgba(0,0,0,0.02)' }}>
-                <div id="aiSummaryOutput" style={{ fontSize: '16px', lineHeight: '1.6', color: 'var(--color-text)', fontWeight: '500', opacity: isAiLoading ? 0.5 : 1 }}>
-                  {aiSummaryOutput || t.ai_helper_text}
-                </div>
-                {isAiLoading && (
-                  <div id="aiLoader" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-primary)', marginTop: '10px' }}>
-                    <i className="fas fa-circle-notch fa-spin"></i> {t.analyzing_data}
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Collapsible telemetry grids */}
             <div className="collapsible-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>

@@ -14,15 +14,15 @@ class _LoginScreenState extends State<LoginScreen>
   late TabController _tabController;
 
   // User Controllers
-  final _userNameController = TextEditingController();
-  final _userPhoneController = TextEditingController();
-  final _userEmergencyController = TextEditingController();
+  final _userIdController = TextEditingController();
+  final _userPasswordController = TextEditingController();
 
   // Admin Controllers
   final _adminIdController = TextEditingController();
   final _adminPasswordController = TextEditingController();
 
-  bool _isPasswordVisible = false;
+  bool _isUserPasswordVisible = false;
+  bool _isAdminPasswordVisible = false;
   bool _isLoading = false;
 
   @override
@@ -34,42 +34,42 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _userNameController.dispose();
-    _userPhoneController.dispose();
-    _userEmergencyController.dispose();
+    _userIdController.dispose();
+    _userPasswordController.dispose();
     _adminIdController.dispose();
     _adminPasswordController.dispose();
     super.dispose();
   }
 
   void _loginAsUser() async {
-    final name = _userNameController.text.trim();
-    final phone = _userPhoneController.text.trim();
-    final emergency = _userEmergencyController.text.trim();
+    final id = _userIdController.text.trim();
+    final password = _userPasswordController.text.trim();
 
-    if (name.isEmpty || phone.isEmpty) {
-      _showErrorSnackBar('Please fill in Name and Phone Number');
+    if (id.isEmpty || password.isEmpty) {
+      _showErrorSnackBar('Please fill in User ID and Access Code');
       return;
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(
-        const Duration(milliseconds: 800)); // Simulate local validation
+    await Future.delayed(const Duration(milliseconds: 600));
 
-    // Save details to Local Storage
-    await StorageService.saveIsLoggedIn(true);
-    await StorageService.saveIsAdmin(false); // Normal User access
-    await StorageService.saveUsername(name);
+    // Validate User credentials: ID = 1, Password = 1
+    if (id == '1' && password == '1') {
+      await StorageService.saveIsLoggedIn(true);
+      await StorageService.saveIsAdmin(false); // Normal User access
+      await StorageService.saveUsername('User 1');
+      await StorageService.saveRole('Victim'); // Default role is Victim
+      await StorageService.saveDeviceName('User_1');
 
-    // Ensure standard user starts in 'Victim' role and cannot access Command Screen
-    await StorageService.saveRole('Victim');
-    await StorageService.saveDeviceName('User_$name');
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardShell()),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardShell()),
+        );
+      }
+    } else {
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Invalid User Credentials. Use ID: 1, Code: 1');
     }
   }
 
@@ -78,18 +78,17 @@ class _LoginScreenState extends State<LoginScreen>
     final password = _adminPasswordController.text.trim();
 
     if (id.isEmpty || password.isEmpty) {
-      _showErrorSnackBar('Please fill in Admin ID and Password');
+      _showErrorSnackBar('Please fill in Admin ID and Access Code');
       return;
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(
-        milliseconds: 1000)); // Simulate secure local decryption/auth
+    await Future.delayed(const Duration(milliseconds: 600));
 
-    // Admin local credential validation
-    if (id == 'admin' && password == 'admin123') {
+    // Validate Admin credentials: ID = 2, Password = 2
+    if (id == '2' && password == '2') {
       await StorageService.saveIsLoggedIn(true);
-      await StorageService.saveIsAdmin(true); // Administrative HQ access
+      await StorageService.saveIsAdmin(true); // Admin Command access
       await StorageService.saveUsername('ADMIN');
       await StorageService.saveRole('Command'); // Starts in Command role
       await StorageService.saveDeviceName('HQ_COMMAND');
@@ -102,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
     } else {
       setState(() => _isLoading = false);
-      _showErrorSnackBar('Invalid Admin Credentials. Try: admin / admin123');
+      _showErrorSnackBar('Invalid Admin Credentials. Use ID: 2, Code: 2');
     }
   }
 
@@ -192,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen>
                       Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: SizedBox(
-                          height: 280,
+                          height: 220,
                           child: TabBarView(
                             controller: _tabController,
                             children: [
@@ -232,37 +231,36 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-          controller: _userNameController,
+          controller: _userIdController,
           decoration: const InputDecoration(
-            labelText: 'Full Name',
+            labelText: 'User ID',
             prefixIcon: Icon(Icons.person_outline),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10))),
             contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         TextField(
-          controller: _userPhoneController,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'Phone Number',
-            prefixIcon: Icon(Icons.phone_outlined),
-            border: OutlineInputBorder(
+          controller: _userPasswordController,
+          obscureText: !_isUserPasswordVisible,
+          decoration: InputDecoration(
+            labelText: 'Access Code',
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              icon: Icon(_isUserPasswordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off),
+              onPressed: () {
+                setState(() {
+                  _isUserPasswordVisible = !_isUserPasswordVisible;
+                });
+              },
+            ),
+            border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _userEmergencyController,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'Emergency Contact (Optional)',
-            prefixIcon: Icon(Icons.contact_phone_outlined),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),
         const Spacer(),
@@ -295,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen>
         TextField(
           controller: _adminIdController,
           decoration: const InputDecoration(
-            labelText: 'Admin ID / Call-Sign',
+            labelText: 'Admin ID',
             prefixIcon: Icon(Icons.badge_outlined),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10))),
@@ -305,16 +303,17 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 16),
         TextField(
           controller: _adminPasswordController,
-          obscureText: !_isPasswordVisible,
+          obscureText: !_isAdminPasswordVisible,
           decoration: InputDecoration(
             labelText: 'Access Code',
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
-              icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+              icon: Icon(_isAdminPasswordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off),
               onPressed: () {
                 setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
+                  _isAdminPasswordVisible = !_isAdminPasswordVisible;
                 });
               },
             ),
