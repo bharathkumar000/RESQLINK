@@ -1,7 +1,11 @@
 export async function POST(req) {
   try {
-    const { sensorData } = await req.json();
-    const prompt = `As a Disaster Response AI Assistant, analyze these sensor readings and provide a 2-sentence tactical summary for the incident commander. Mention any critical threats.
+    const { sensorData, lang } = await req.json();
+    const languageInstruction = lang === 'kn' 
+      ? 'The output summary MUST be written in Kannada language.' 
+      : 'The output summary MUST be written in English.';
+    
+    const prompt = `As a Disaster Response AI Assistant, analyze these sensor readings and provide a 2-sentence tactical summary for the incident commander. Mention any critical threats. ${languageInstruction}
     Readings: ${JSON.stringify(sensorData)}`;
 
     const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
