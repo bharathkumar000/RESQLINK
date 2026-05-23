@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/sos.dart';
 import '../services/storage_service.dart';
 import '../services/wifi_service.dart';
+import '../services/sync_bridge_service.dart';
 
 class CommandScreen extends StatefulWidget {
   const CommandScreen({Key? key}) : super(key: key);
@@ -14,24 +15,82 @@ class _CommandScreenState extends State<CommandScreen> {
   List<SOS> _sosList = [];
   final _etaController = TextEditingController();
 
+  bool _serverOnline = false;
+  bool _syncing = false;
+  int _unsyncedCount = 0;
+  int _syncedCount = 0;
+
   @override
   void initState() {
     super.initState();
     _loadSOS();
+    _checkServerStatus();
     WifiService.instance.onSyncCompleted = () {
       if (mounted) {
         _loadSOS();
+        _checkServerStatus();
       }
     };
+  }
+
+  void _checkServerStatus() async {
+    final online = await SyncBridgeService.isServerOnline();
+    final allSOS = StorageService.getAllSOS();
+    final unsynced = allSOS.where((sos) => !sos.synced).length;
+    final synced = allSOS.where((sos) => sos.synced).length;
+
+    if (mounted) {
+      setState(() {
+        _serverOnline = online;
+        _unsyncedCount = unsynced;
+        _syncedCount = synced;
+      });
+    }
+  }
+
+  void _syncNow() async {
+    setState(() {
+      _syncing = true;
+    });
+
+    final results = await SyncBridgeService.syncUnsyncedSignals();
+
+    if (mounted) {
+      setState(() {
+        _syncing = false;
+      });
+      _checkServerStatus();
+      _loadSOS();
+
+      final synced = results['synced'] ?? 0;
+      final failed = results['failed'] ?? 0;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            synced > 0
+                ? '🟢 Synced $synced distress signals to HQ Web Server!'
+                : (failed > 0
+                    ? '🔴 Sync failed. Check HQ connection.'
+                    : 'No new signals to sync.'),
+          ),
+          backgroundColor: synced > 0
+              ? Colors.green
+              : (failed > 0 ? Colors.red : Colors.grey),
+        ),
+      );
+    }
   }
 
   void _loadSOS() {
     setState(() {
       _sosList = StorageService.getAllSOS();
       // Command Center only shows requests verified (APPROVED or ESCALATED) by Relay
-      _sosList = _sosList.where((sos) => 
-        sos.relayDecision == 'APPROVED' || sos.relayDecision == 'ESCALATED'
-      ).toList();
+      _sosList = _sosList
+          .where((sos) =>
+              sos.relayDecision == 'APPROVED' ||
+              sos.relayDecision == 'ESCALATED')
+          .toList();
       _sosList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     });
   }
@@ -83,12 +142,14 @@ class _CommandScreenState extends State<CommandScreen> {
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Rescue team dispatched for ${sos.name}! ETA: ${updatedSOS.eta}'),
+                    content: Text(
+                        'Rescue team dispatched for ${sos.name}! ETA: ${updatedSOS.eta}'),
                     backgroundColor: Colors.green,
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6D8B74)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6D8B74)),
               child: const Text('DISPATCH TEAM'),
             ),
           ],
@@ -120,11 +181,14 @@ class _CommandScreenState extends State<CommandScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pendingDispatch = _sosList.where((sos) => sos.commandDecision == 'PENDING').toList();
-    final dispatchedRequests = _sosList.where((sos) => sos.commandDecision == 'DISPATCHED').toList();
+    final pendingDispatch =
+        _sosList.where((sos) => sos.commandDecision == 'PENDING').toList();
+    final dispatchedRequests =
+        _sosList.where((sos) => sos.commandDecision == 'DISPATCHED').toList();
 
     return Column(
       children: [
+        _buildSyncCard(),
         _buildStatsHeader(),
         DefaultTabController(
           length: 2,
@@ -136,7 +200,9 @@ class _CommandScreenState extends State<CommandScreen> {
                   indicatorColor: const Color(0xFF6D8B74),
                   tabs: [
                     Tab(text: 'Pending Dispatch (${pendingDispatch.length})'),
-                    Tab(text: 'Active Dispatches (${dispatchedRequests.length})'),
+                    Tab(
+                        text:
+                            'Active Dispatches (${dispatchedRequests.length})'),
                   ],
                 ),
                 Expanded(
@@ -155,9 +221,101 @@ class _CommandScreenState extends State<CommandScreen> {
     );
   }
 
+  Widget _buildSyncCard() {
+    return Card(
+      margin: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 4),
+      color: Colors.grey[900],
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _serverOnline
+                    ? Colors.green.withOpacity(0.2)
+                    : Colors.red.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _serverOnline ? Icons.cloud_done : Icons.cloud_off,
+                color: _serverOnline ? Colors.green : Colors.red,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'HQ Cloud Sync Bridge',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _serverOnline
+                        ? 'HQ Server ONLINE | ${StorageService.getServerUrl()}'
+                        : 'HQ Server OFFLINE | Check Network Settings',
+                    style: TextStyle(
+                      color:
+                          _serverOnline ? Colors.green[200] : Colors.red[200],
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Local DB: $_unsyncedCount unsynced, $_syncedCount synced signals',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_syncing)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2),
+              )
+            else
+              ElevatedButton.icon(
+                onPressed: _serverOnline ? _syncNow : _checkServerStatus,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _serverOnline
+                      ? const Color(0xFF6D8B74)
+                      : Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  textStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                icon: Icon(
+                  _serverOnline ? Icons.sync : Icons.refresh,
+                  size: 14,
+                ),
+                label: Text(_serverOnline ? 'SYNC' : 'RETRY'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatsHeader() {
     final totalVerified = _sosList.length;
-    final totalDispatched = _sosList.where((s) => s.status == 'DISPATCHED').length;
+    final totalDispatched =
+        _sosList.where((s) => s.status == 'DISPATCHED').length;
     final pendingCount = totalVerified - totalDispatched;
 
     return Container(
@@ -182,11 +340,16 @@ class _CommandScreenState extends State<CommandScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text(
               val,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold, color: color),
             ),
           ],
         ),
@@ -200,9 +363,9 @@ class _CommandScreenState extends State<CommandScreen> {
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            isPending 
-              ? 'No verified requests waiting to be dispatched.\nSync with Relay nodes to fetch verified alerts.'
-              : 'No active dispatches on record.',
+            isPending
+                ? 'No verified requests waiting to be dispatched.\nSync with Relay nodes to fetch verified alerts.'
+                : 'No active dispatches on record.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
@@ -217,7 +380,8 @@ class _CommandScreenState extends State<CommandScreen> {
         final sos = list[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 2,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -230,7 +394,8 @@ class _CommandScreenState extends State<CommandScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -238,26 +403,34 @@ class _CommandScreenState extends State<CommandScreen> {
                           ),
                           child: Text(
                             sos.id,
-                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12),
+                            style: const TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12),
                           ),
                         ),
                         const SizedBox(width: 8),
                         if (sos.relayDecision == 'ESCALATED')
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.redAccent,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(
                               'ESCALATED',
-                              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
@@ -268,7 +441,10 @@ class _CommandScreenState extends State<CommandScreen> {
                           SizedBox(width: 4),
                           Text(
                             'Relay Verified',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10),
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10),
                           ),
                         ],
                       ),
@@ -278,15 +454,36 @@ class _CommandScreenState extends State<CommandScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Stranded: ${sos.name}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 4),
-                Text('Emergency Need: ${sos.need}', style: const TextStyle(fontSize: 15)),
-                Text('Stranded Count: ${sos.people} People', style: const TextStyle(fontSize: 14)),
-                Text('Location: ${sos.location}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                
+                Text('Emergency Need: ${sos.need}',
+                    style: const TextStyle(fontSize: 15)),
+                Text('Stranded Count: ${sos.people} People',
+                    style: const TextStyle(fontSize: 14)),
+                Text('Location: ${sos.location}',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                if (sos.safetyChecklist.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: sos.safetyChecklist.map((item) {
+                      return Chip(
+                        labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: -4),
+                        backgroundColor: Colors.grey.shade200,
+                        label: Text(
+                          item,
+                          style: const TextStyle(
+                              color: Colors.black87, fontSize: 10),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
                 const Divider(height: 20),
-
                 if (isPending) ...[
                   Row(
                     children: [
@@ -296,7 +493,8 @@ class _CommandScreenState extends State<CommandScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Text('REJECT'),
                         ),
@@ -308,7 +506,8 @@ class _CommandScreenState extends State<CommandScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6D8B74),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           icon: const Icon(Icons.navigation, size: 16),
                           label: const Text('DISPATCH TEAM'),
@@ -322,11 +521,14 @@ class _CommandScreenState extends State<CommandScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                          const Icon(Icons.check_circle,
+                              color: Colors.green, size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Dispatched (ETA: ${sos.eta})',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green),
                           ),
                         ],
                       ),
@@ -335,7 +537,8 @@ class _CommandScreenState extends State<CommandScreen> {
                           // Allow updating dispatch status/ETA
                           _dispatchRescue(sos);
                         },
-                        child: const Text('Update ETA', style: TextStyle(color: Color(0xFF5F7161))),
+                        child: const Text('Update ETA',
+                            style: TextStyle(color: Color(0xFF5F7161))),
                       )
                     ],
                   ),
