@@ -41,7 +41,7 @@ class _RelayScreenState extends State<RelayScreen> {
 
     await StorageService.saveSOS(updatedSOS);
     _loadSOS();
-    
+
     // Broadcast changes immediately to the mesh
     WifiService.instance.syncAllData();
 
@@ -56,8 +56,10 @@ class _RelayScreenState extends State<RelayScreen> {
   @override
   Widget build(BuildContext context) {
     // Separate pending vs completed/decided requests
-    final pendingRequests = _sosList.where((sos) => sos.relayDecision == 'PENDING').toList();
-    final decidedRequests = _sosList.where((sos) => sos.relayDecision != 'PENDING').toList();
+    final pendingRequests =
+        _sosList.where((sos) => sos.relayDecision == 'PENDING').toList();
+    final decidedRequests =
+        _sosList.where((sos) => sos.relayDecision != 'PENDING').toList();
 
     return DefaultTabController(
       length: 2,
@@ -65,7 +67,7 @@ class _RelayScreenState extends State<RelayScreen> {
         children: [
           // Mesh Banner Info
           _buildMeshStatusBanner(),
-          
+
           TabBar(
             labelColor: const Color(0xFF5F7161),
             indicatorColor: const Color(0xFF6D8B74),
@@ -96,7 +98,8 @@ class _RelayScreenState extends State<RelayScreen> {
 
         if (status == MeshConnectionStatus.connected) {
           bannerColor = const Color(0xFF6D8B74);
-          statusText = "Mesh Connected: ${WifiService.instance.connectedPeers.length} active nodes";
+          statusText =
+              "Mesh Connected: ${WifiService.instance.connectedPeers.length} active nodes";
         } else if (status == MeshConnectionStatus.advertising) {
           bannerColor = Colors.orangeAccent;
           statusText = "Syncing with surrounding nodes...";
@@ -122,7 +125,10 @@ class _RelayScreenState extends State<RelayScreen> {
                   const SizedBox(width: 8),
                   Text(
                     statusText,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: bannerColor, fontSize: 13),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: bannerColor,
+                        fontSize: 13),
                   ),
                 ],
               ),
@@ -130,18 +136,24 @@ class _RelayScreenState extends State<RelayScreen> {
                 onPressed: () {
                   WifiService.instance.syncAllData();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cascading data sync triggered across mesh!')),
+                    const SnackBar(
+                        content:
+                            Text('Cascading data sync triggered across mesh!')),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: bannerColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   minimumSize: Size.zero,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6)),
                 ),
                 icon: const Icon(Icons.sync, size: 12),
-                label: const Text('SYNC', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                label: const Text('SYNC',
+                    style:
+                        TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
               )
             ],
           ),
@@ -156,9 +168,9 @@ class _RelayScreenState extends State<RelayScreen> {
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            isPending 
-              ? 'No pending distress signals in range.\nWaiting to connect and sync with Victim devices...'
-              : 'No verified requests in your local registry.',
+            isPending
+                ? 'No pending distress signals in range.\nWaiting to connect and sync with Victim devices...'
+                : 'No verified requests in your local registry.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
@@ -173,7 +185,8 @@ class _RelayScreenState extends State<RelayScreen> {
         final sos = list[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 2,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -184,7 +197,8 @@ class _RelayScreenState extends State<RelayScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -192,7 +206,10 @@ class _RelayScreenState extends State<RelayScreen> {
                       ),
                       child: Text(
                         sos.id,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                        style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
                       ),
                     ),
                     Text(
@@ -204,25 +221,29 @@ class _RelayScreenState extends State<RelayScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Name: ${sos.name}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 4),
-                Text('Distress Need: ${sos.need}', style: const TextStyle(fontSize: 15)),
-                Text('People Stranded: ${sos.people}', style: const TextStyle(fontSize: 14)),
-                Text('Location: ${sos.location}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                
+                Text('Distress Need: ${sos.need}',
+                    style: const TextStyle(fontSize: 15)),
+                Text('People Stranded: ${sos.people}',
+                    style: const TextStyle(fontSize: 14)),
+                Text('Location: ${sos.location}',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey)),
                 const Divider(height: 20),
-
                 if (isPending) ...[
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _updateDecision(sos, 'REJECTED', 'CREATED'),
+                          onPressed: () =>
+                              _updateDecision(sos, 'REJECTED', 'CREATED'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Text('REJECT'),
                         ),
@@ -230,11 +251,13 @@ class _RelayScreenState extends State<RelayScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _updateDecision(sos, 'ESCALATED', 'COMMAND_PENDING'),
+                          onPressed: () => _updateDecision(
+                              sos, 'ESCALATED', 'COMMAND_PENDING'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.orange,
                             side: const BorderSide(color: Colors.orange),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Text('ESCALATE'),
                         ),
@@ -242,11 +265,13 @@ class _RelayScreenState extends State<RelayScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _updateDecision(sos, 'APPROVED', 'COMMAND_PENDING'),
+                          onPressed: () => _updateDecision(
+                              sos, 'APPROVED', 'COMMAND_PENDING'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6D8B74),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Text('ACCEPT'),
                         ),
@@ -264,20 +289,24 @@ class _RelayScreenState extends State<RelayScreen> {
                             sos.relayDecision,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: sos.relayDecision == 'APPROVED' ? Colors.green : Colors.red,
+                              color: sos.relayDecision == 'APPROVED'
+                                  ? Colors.green
+                                  : Colors.red,
                             ),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFF5F7161).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           'Status: ${sos.status}',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
