@@ -332,6 +332,7 @@ export default function Home() {
               const mlResult = calculateMLPriority(req.resourceType, req.individualsAffected, req.severity);
               return {
                 ...req,
+                id: req.id || req.requestId,
                 priorityScore: mlResult.priorityScore,
                 mlPriorityClass: mlResult.priorityClass,
                 mlConfidence: mlResult.mlConfidence / 100
@@ -1412,7 +1413,7 @@ export default function Home() {
                     </thead>
                     <tbody id="activeRequestsTable">
                       {sortedRequests.active.map(req => (
-                        <tr key={req.id}>
+                        <tr key={req.id || req.requestId}>
                           <td>{req.resourceType}</td>
                           <td>{req.quantityAllocated || 0}/{req.quantityRequested}</td>
                           <td style={{ fontSize: '13px', maxWidth: '150px' }}>{req.address || `Lat: ${req.lat.toFixed(4)}, Lng: ${req.lng.toFixed(4)}`}</td>
@@ -1608,7 +1609,7 @@ export default function Home() {
                   </thead>
                   <tbody>
                     {sortedRequests.resolved.map(req => (
-                      <tr key={req.id}>
+                      <tr key={req.id || req.requestId}>
                         <td><strong>{req.requestId}</strong></td>
                         <td>{req.resourceType}</td>
                         <td style={{ fontSize: '12px', maxWidth: '150px' }}>{req.address || `Lat: ${req.lat.toFixed(4)}, Lng: ${req.lng.toFixed(4)}`}</td>
