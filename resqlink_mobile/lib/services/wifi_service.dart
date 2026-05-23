@@ -16,14 +16,14 @@ class WifiService {
 
   // Active connections: endpointId -> PeerDetails
   final Map<String, PeerDetails> connectedPeers = {};
-  
+
   // Discovered endpoints: endpointId -> name
   final Map<String, String> discoveredEndpoints = {};
 
   // Status notifier for UI
-  final ValueNotifier<MeshConnectionStatus> connectionStatus = 
+  final ValueNotifier<MeshConnectionStatus> connectionStatus =
       ValueNotifier<MeshConnectionStatus>(MeshConnectionStatus.disconnected);
-  
+
   // Callback when local storage is updated by sync
   VoidCallback? onSyncCompleted;
 
@@ -59,7 +59,8 @@ class WifiService {
     if (connectedPeers.isNotEmpty) {
       connectionStatus.value = MeshConnectionStatus.connected;
     } else if (_isAdvertising && _isDiscovering) {
-      connectionStatus.value = MeshConnectionStatus.connected; // mesh active (searching/advertising)
+      connectionStatus.value =
+          MeshConnectionStatus.connected; // mesh active (searching/advertising)
     } else if (_isAdvertising) {
       connectionStatus.value = MeshConnectionStatus.advertising;
     } else if (_isDiscovering) {
@@ -72,7 +73,8 @@ class WifiService {
   // Advertising
   Future<bool> _startAdvertising() async {
     try {
-      final myName = "${StorageService.getDeviceName()} (${StorageService.getRole()})";
+      final myName =
+          "${StorageService.getDeviceName()} (${StorageService.getRole()})";
       bool running = await Nearby().startAdvertising(
         myName,
         strategy,
@@ -120,9 +122,11 @@ class WifiService {
   }
 
   // Request Connection
-  Future<void> _requestConnection(String endpointId, String endpointName) async {
+  Future<void> _requestConnection(
+      String endpointId, String endpointName) async {
     try {
-      final myName = "${StorageService.getDeviceName()} (${StorageService.getRole()})";
+      final myName =
+          "${StorageService.getDeviceName()} (${StorageService.getRole()})";
       await Nearby().requestConnection(
         myName,
         endpointId,
@@ -141,7 +145,8 @@ class WifiService {
     // Automatically accept incoming connection to keep the experience seamless
     Nearby().acceptConnection(
       endpointId,
-      onPayLoadRecieved: (id, payload) => _onPayloadReceived(endpointId, payload),
+      onPayLoadRecieved: (id, payload) =>
+          _onPayloadReceived(endpointId, payload),
       onPayloadTransferUpdate: (id, payloadTransferUpdate) {},
     );
   }
@@ -152,7 +157,7 @@ class WifiService {
       final name = discoveredEndpoints[endpointId] ?? 'Peer';
       connectedPeers[endpointId] = PeerDetails(id: endpointId, name: name);
       _updateStatus();
-      
+
       // Perform handshake and sync instantly
       syncAllData();
     } else {
@@ -202,10 +207,11 @@ class WifiService {
         final peerName = dataMap['deviceName'] ?? 'Unknown';
         final sosListMaps = dataMap['sosList'] as List<dynamic>;
 
-        print('Received sync payload from $peerName ($peerRole) containing ${sosListMaps.length} items');
+        print(
+            'Received sync payload from $peerName ($peerRole) containing ${sosListMaps.length} items');
 
         bool hasChanges = false;
-        
+
         for (var item in sosListMaps) {
           final incomingSOS = SOS.fromMap(Map<String, dynamic>.from(item));
           final existingSOS = StorageService.getSOS(incomingSOS.id);
@@ -224,7 +230,8 @@ class WifiService {
         }
 
         if (hasChanges) {
-          print('Local state updated from sync. Refreshing UI and cascading updates.');
+          print(
+              'Local state updated from sync. Refreshing UI and cascading updates.');
           if (onSyncCompleted != null) {
             onSyncCompleted!();
           }
