@@ -6,6 +6,8 @@ import 'services/wifi_service.dart';
 import 'screens/victim_screen.dart';
 import 'screens/relay_screen.dart';
 import 'screens/command_screen.dart';
+import 'screens/map_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +39,9 @@ class ResQLinkApp extends StatelessWidget {
           elevation: 2,
         ),
       ),
-      home: const DashboardShell(),
+      home: StorageService.isLoggedIn()
+          ? const DashboardShell()
+          : const LoginScreen(),
     );
   }
 }
@@ -58,8 +62,12 @@ class _DashboardShellState extends State<DashboardShell> {
   void initState() {
     super.initState();
     _currentRole = StorageService.getRole();
+    if (!StorageService.isAdmin() && _currentRole == 'Command') {
+      _currentRole = 'Victim';
+      StorageService.saveRole('Victim');
+    }
     _deviceName = StorageService.getDeviceName();
-    
+
     // Automatically check permissions and request them
     _requestPermissions();
   }
@@ -81,10 +89,10 @@ class _DashboardShellState extends State<DashboardShell> {
     if (enable) {
       // Prompt permissions again just in case
       _requestPermissions();
-      
+
       // Start advertising & discovery
       bool started = await WifiService.instance.startMesh();
-      
+
       if (mounted) {
         if (started) {
           setState(() {
@@ -92,7 +100,8 @@ class _DashboardShellState extends State<DashboardShell> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('🟢 Offline Mesh Active! Discovery & Sync Enabled.'),
+              content:
+                  Text('🟢 Offline Mesh Active! Discovery & Sync Enabled.'),
               backgroundColor: Color(0xFF6D8B74),
             ),
           );
@@ -140,7 +149,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   void _changeRole(String? newRole) async {
     if (newRole == null) return;
-    
+
     // Stop current mesh before changing role parameters
     bool wasMeshEnabled = _meshEnabled;
     if (wasMeshEnabled) {
@@ -150,7 +159,8 @@ class _DashboardShellState extends State<DashboardShell> {
     await StorageService.saveRole(newRole);
     setState(() {
       _currentRole = newRole;
-      _meshEnabled = false; // Turn off to force restart with new role parameters
+      _meshEnabled =
+          false; // Turn off to force restart with new role parameters
     });
 
     if (wasMeshEnabled) {
@@ -160,6 +170,8 @@ class _DashboardShellState extends State<DashboardShell> {
 
   void _showSettingsDialog() {
     final nameController = TextEditingController(text: _deviceName);
+    final urlController =
+        TextEditingController(text: StorageService.getServerUrl());
     showDialog(
       context: context,
       builder: (context) {
@@ -175,6 +187,15 @@ class _DashboardShellState extends State<DashboardShell> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: urlController,
+                decoration: const InputDecoration(
+                  labelText: 'HQ Server API URL',
+                  helperText: 'e.g. http://192.168.1.100:3000',
+                  border: OutlineInputBorder(),
+                ),
+              ),
             ],
           ),
           actions: [
@@ -185,19 +206,24 @@ class _DashboardShellState extends State<DashboardShell> {
             ElevatedButton(
               onPressed: () async {
                 final newName = nameController.text.trim();
+                final newUrl = urlController.text.trim();
                 if (newName.isNotEmpty) {
                   await StorageService.saveDeviceName(newName);
                   setState(() {
                     _deviceName = newName;
                   });
-                  // Restart mesh if active
-                  if (_meshEnabled) {
-                    _toggleMesh(true);
-                  }
+                }
+                if (newUrl.isNotEmpty) {
+                  await StorageService.saveServerUrl(newUrl);
+                }
+                // Restart mesh if active
+                if (_meshEnabled) {
+                  _toggleMesh(true);
                 }
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6D8B74)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6D8B74)),
               child: const Text('SAVE'),
             ),
           ],
@@ -212,7 +238,8 @@ class _DashboardShellState extends State<DashboardShell> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Reset Data?'),
-          content: const Text('This will delete all stored SOS alerts on this local node.'),
+          content: const Text(
+              'This will delete all stored SOS alerts on this local node.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -227,7 +254,8 @@ class _DashboardShellState extends State<DashboardShell> {
                   WifiService.instance.onSyncCompleted!();
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Database cleared successfully.')),
+                  const SnackBar(
+                      content: Text('Database cleared successfully.')),
                 );
               },
               child: const Text('RESET', style: TextStyle(color: Colors.red)),
@@ -279,8 +307,12 @@ class _DashboardShellState extends State<DashboardShell> {
                 value: _currentRole,
                 dropdownColor: const Color(0xFF5F7161),
                 icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                items: <String>['Victim', 'Relay', 'Command'].map((String val) {
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+                items: (StorageService.isAdmin()
+                        ? <String>['Command', 'Relay', 'Victim']
+                        : <String>['Victim', 'Relay'])
+                    .map((String val) {
                   return DropdownMenuItem<String>(
                     value: val,
                     child: Text(val),
@@ -291,6 +323,16 @@ class _DashboardShellState extends State<DashboardShell> {
             ),
           ),
           IconButton(
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MapScreen()),
+              );
+            },
+            tooltip: 'View Map',
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _showSettingsDialog,
             tooltip: 'Configure Node Name',
@@ -299,6 +341,21 @@ class _DashboardShellState extends State<DashboardShell> {
             icon: const Icon(Icons.delete_sweep_outlined),
             onPressed: _clearLocalDatabase,
             tooltip: 'Clear DB',
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () async {
+              await WifiService.instance.stopMesh();
+              await StorageService.saveIsLoggedIn(false);
+              await StorageService.saveUsername('');
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              }
+            },
+            tooltip: 'Log Out',
           ),
         ],
       ),
@@ -316,12 +373,16 @@ class _DashboardShellState extends State<DashboardShell> {
               Row(
                 children: [
                   Icon(
-                    _meshEnabled ? Icons.wifi_tethering : Icons.wifi_tethering_off,
+                    _meshEnabled
+                        ? Icons.wifi_tethering
+                        : Icons.wifi_tethering_off,
                     color: _meshEnabled ? Colors.green : Colors.red,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _meshEnabled ? 'Mesh Signal: ACTIVE' : 'Mesh Signal: INACTIVE',
+                    _meshEnabled
+                        ? 'Mesh Signal: ACTIVE'
+                        : 'Mesh Signal: INACTIVE',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: _meshEnabled ? Colors.green : Colors.red,
