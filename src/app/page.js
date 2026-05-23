@@ -162,7 +162,7 @@ const TRANSLATIONS = {
     ai_helper_text: "Click 'Generate Situation Report' to get an AI analysis of the current environment logs.",
     analyzing_data: "Analyzing data...",
     weather_forecast: "Weather Forecast",
-    loading_weather: "{t.loading_weather}",
+    loading_weather: "Loading weather details...",
     command_map: "Emergency Command Map",
     live_deployment: "LIVE DEPLOYMENT",
     last_sync: "Last Sync",
@@ -190,7 +190,7 @@ const TRANSLATIONS = {
     password: "Password",
     login_btn: "Login",
     demo_btn: "Use Demo Admin Credentials",
-    dont_have_account: "{t.dont_have_account}",
+    dont_have_account: "Don't have an account? Register new account",
     disaster_mgmt: "Disaster Response Management System",
     join_resq: "Join ResQ Link",
     create_account_sub: "Create your account to get started",
@@ -202,8 +202,8 @@ const TRANSLATIONS = {
     account_type: "Account Type",
     standard_fn: "Standard Functionality",
     sys_mgmt: "System Management",
-    create_account_btn: "{t.create_account_btn}",
-    already_have_account: "{t.already_have_account}",
+    create_account_btn: "Create Account",
+    already_have_account: "Already have an account? Login here",
     type: "Type",
     qty_short: "Qty",
     location: "Location",
@@ -241,7 +241,9 @@ const TRANSLATIONS = {
     save: "Save",
     pinned_target: "Pinned Target",
     map_pin_required: "🚨 Map Target Pin Required",
-    dispatch: "{t.dispatch}",
+    dispatch: "Dispatch",
+    admin: "Admin",
+    from_north: "from North",
     exhaustion_forecast: "Inventory Exhaustion Forecast",
     hrs_left: "hrs left",
     burn_rate: "Burn Rate",
@@ -379,6 +381,8 @@ const TRANSLATIONS = {
     pinned_target: "ಪಿನ್ ಮಾಡಿದ ಗುರಿ",
     map_pin_required: "🚨 ನಕ್ಷೆಯಲ್ಲಿ ಗುರಿ ಗುರುತಿಸುವುದು ಅಗತ್ಯ",
     dispatch: "ನಿಯೋಜಿಸು",
+    admin: "ನಿರ್ವಾಹಕರು",
+    from_north: "ಉತ್ತರದಿಂದ",
     exhaustion_forecast: "ದಾಸ್ತಾನು ಖಾಲಿಯಾಗುವ ಮುನ್ಸೂಚನೆ",
     hrs_left: "ಗಂಟೆಗಳು ಬಾಕಿ",
     burn_rate: "ಬಳಕೆಯ ದರ",
@@ -602,7 +606,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchWeather(currentBaseLocation.lat, currentBaseLocation.lng);
-  }, [currentBaseLocation]);
+  }, [currentBaseLocation, lang]);
 
   // 2. Real-Time Supabase Subscription
   useEffect(() => {
@@ -668,7 +672,7 @@ export default function Home() {
 
   // 3. API Requests & Helper Functions
   const fetchWeather = (lat, lng) => {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${WEATHER_API_KEY}&units=metric`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${WEATHER_API_KEY}&units=metric&lang=${lang === 'kn' ? 'kn' : 'en'}`;
     fetch(url)
       .then(res => res.json())
       .then(data => {
@@ -679,21 +683,21 @@ export default function Home() {
 
   const getAISummary = async () => {
     setIsAiLoading(true);
-    setAiSummaryOutput("Analyzing telemetry vectors and compiled reports...");
+    setAiSummaryOutput(lang === 'kn' ? "ಟೆಲಿಮೆಟ್ರಿ ವೆಕ್ಟರ್‌ಗಳು ಮತ್ತು ಸಂಕಲಿಸಿದ ವರದಿಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ..." : "Analyzing telemetry vectors and compiled reports...");
     try {
       const response = await fetch('/api/ai-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sensorData })
+        body: JSON.stringify({ sensorData, lang })
       });
       const data = await response.json();
       if (data.summary) {
         setAiSummaryOutput(data.summary);
       } else {
-        setAiSummaryOutput("AI failed to infer logs. Please check local gemma4:latest instance.");
+        setAiSummaryOutput(lang === 'kn' ? "AI ಲಾಗ್‌ಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಸ್ಥಳೀಯ gemma4:latest ಪ್ರತಿಯನ್ನು ಪರಿಶೀಲಿಸಿ." : "AI failed to infer logs. Please check local gemma4:latest instance.");
       }
     } catch (err) {
-      setAiSummaryOutput("Offline: Please verify local Ollama daemon is running with model 'gemma4:latest'.");
+      setAiSummaryOutput(lang === 'kn' ? "ಆಫ್‌ಲೈನ್: ದಯವಿಟ್ಟು 'gemma4:latest' ಮಾದರಿಯೊಂದಿಗೆ ಸ್ಥಳೀಯ Ollama ರನ್ ಆಗುತ್ತಿರುವುದನ್ನು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ." : "Offline: Please verify local Ollama daemon is running with model 'gemma4:latest'.");
     } finally {
       setIsAiLoading(false);
     }
@@ -1252,22 +1256,22 @@ export default function Home() {
   const getWeatherItems = (data) => {
     if (!data) return [];
     const windDirection = data.wind && data.wind.deg !== undefined
-        ? `${degToCardinal(data.wind.deg)} (${data.wind.deg}° from North)`
+        ? `${degToCardinal(data.wind.deg)} (${data.wind.deg}° ${t.from_north})`
         : 'N/A';
 
     return [
-      { label: 'City Name', value: data.name || 'N/A' },
-      { label: 'Weather Description', value: data.weather && data.weather[0] ? data.weather[0].description : 'N/A' },
-      { label: 'Temperature', value: data.main ? `${data.main.temp}°C` : 'N/A' },
-      { label: 'Feels Like', value: data.main ? `${data.main.feels_like}°C` : 'N/A' },
-      { label: 'Humidity', value: data.main ? `${data.main.humidity}%` : 'N/A' },
-      { label: 'Pressure', value: data.main ? `${data.main.pressure} hPa` : 'N/A' },
-      { label: 'Wind Speed', value: data.wind ? `${data.wind.speed} m/s` : 'N/A' },
-      { label: 'Wind Direction', value: windDirection },
-      { label: 'Visibility', value: data.visibility !== undefined ? `${(data.visibility / 1000).toFixed(1)} km` : 'N/A' },
-      { label: 'Cloudiness', value: data.clouds ? `${data.clouds.all}%` : 'N/A' },
-      { label: 'Coordinates', value: data.coord ? `${data.coord.lat.toFixed(6)}, ${data.coord.lon.toFixed(6)}` : 'N/A' },
-      { label: 'Timezone', value: data.timezone !== undefined ? `GMT${data.timezone >= 0 ? '+' : ''}${data.timezone / 3600}` : 'N/A' },
+      { label: t.city_name, value: data.name || 'N/A' },
+      { label: t.weather_desc, value: data.weather && data.weather[0] ? data.weather[0].description : 'N/A' },
+      { label: t.temp, value: data.main ? `${data.main.temp}°C` : 'N/A' },
+      { label: t.feels_like, value: data.main ? `${data.main.feels_like}°C` : 'N/A' },
+      { label: t.hum, value: data.main ? `${data.main.humidity}%` : 'N/A' },
+      { label: t.pressure, value: data.main ? `${data.main.pressure} hPa` : 'N/A' },
+      { label: t.windSpeed, value: data.wind ? `${data.wind.speed} m/s` : 'N/A' },
+      { label: t.windDir, value: windDirection },
+      { label: t.visibility, value: data.visibility !== undefined ? `${(data.visibility / 1000).toFixed(1)} km` : 'N/A' },
+      { label: t.cloudiness, value: data.clouds ? `${data.clouds.all}%` : 'N/A' },
+      { label: t.coordinates, value: data.coord ? `${data.coord.lat.toFixed(6)}, ${data.coord.lon.toFixed(6)}` : 'N/A' },
+      { label: t.timezone, value: data.timezone !== undefined ? `GMT${data.timezone >= 0 ? '+' : ''}${data.timezone / 3600}` : 'N/A' },
     ];
   };
 
@@ -1467,7 +1471,7 @@ export default function Home() {
                 <span>{lang === 'en' ? 'ಕನ್ನಡ' : 'English'}</span>
               </button>
               <div className="user-info">
-                <span id="userRole" style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Admin</span>
+                <span id="userRole" style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>{t.admin}</span>
               </div>
               <button className="btn btn-logout btn-small" onClick={handleLogout}>{t.logout}</button>
             </div>
@@ -1480,28 +1484,28 @@ export default function Home() {
               <div className="stat-card">
                 <div className="icon-container"><i className="fas fa-clipboard-list"></i></div>
                 <div className="stat-content">
-                  <h3>Total Requests</h3>
+                  <h3>{t.total_req}</h3>
                   <div className="value">{requests.length}</div>
                 </div>
               </div>
               <div className="stat-card">
                 <div className="icon-container"><i className="fas fa-hourglass-half"></i></div>
                 <div className="stat-content">
-                  <h3>Active Requests</h3>
+                  <h3>{t.active_req_short}</h3>
                   <div className="value">{requests.filter(r => r.status !== 'resolved').length}</div>
                 </div>
               </div>
               <div className="stat-card">
                 <div className="icon-container"><i className="fas fa-check-circle"></i></div>
                 <div className="stat-content">
-                  <h3>Resolved Requests</h3>
+                  <h3>{t.resolved_req_short}</h3>
                   <div className="value">{requests.filter(r => r.status === 'resolved').length}</div>
                 </div>
               </div>
               <div className="stat-card">
                 <div className="icon-container"><i className="fas fa-exclamation-triangle"></i></div>
                 <div className="stat-content">
-                  <h3>Critical Priority</h3>
+                  <h3>{t.critical_priority}</h3>
                   <div className="value">{requests.filter(r => r.mlPriorityClass === 'critical' && r.status !== 'resolved').length}</div>
                 </div>
               </div>
@@ -1510,18 +1514,18 @@ export default function Home() {
             {/* AI Assistant situational brief */}
             <div id="aiAssistantSection" className="weather-section" style={{ marginBottom: '24px', border: '2px solid var(--color-primary)', display: 'block' }}>
               <div className="weather-header" style={{ background: 'linear-gradient(90deg, var(--color-darkest) 0%, var(--color-primary) 100%)', color: 'white' }}>
-                <h2 style={{ color: 'white' }}><i className="fas fa-robot"></i> ResqLink AI Assistant</h2>
+                <h2 style={{ color: 'white' }}><i className="fas fa-robot"></i> {t.ai_assistant}</h2>
                 <button className="btn btn-secondary btn-small" onClick={getAISummary} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white' }} disabled={isAiLoading}>
-                  <i className="fas fa-sync-alt"></i> Generate Situation Report
+                  <i className="fas fa-sync-alt"></i> {isAiLoading ? t.analyzing_data : t.gen_report}
                 </button>
               </div>
               <div style={{ padding: '20px', background: 'rgba(0,0,0,0.02)' }}>
                 <div id="aiSummaryOutput" style={{ fontSize: '16px', lineHeight: '1.6', color: 'var(--color-text)', fontWeight: '500', opacity: isAiLoading ? 0.5 : 1 }}>
-                  {aiSummaryOutput}
+                  {aiSummaryOutput || t.ai_helper_text}
                 </div>
                 {isAiLoading && (
                   <div id="aiLoader" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-primary)', marginTop: '10px' }}>
-                    <i className="fas fa-circle-notch fa-spin"></i> Analyzing data...
+                    <i className="fas fa-circle-notch fa-spin"></i> {t.analyzing_data}
                   </div>
                 )}
               </div>
@@ -1547,7 +1551,7 @@ export default function Home() {
                     <div className="stat-card hw-card" id="hwCardAltitude"><div className="stat-content"><h3>{t.altitude}</h3><div className="value">{sensorData.altitude} m</div></div></div>
                   </div>
                   <div style={{ padding: '0 15px 15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
-                    Last Sync: {new Date(sensorData.created_at).toLocaleTimeString()}
+                    {t.last_sync || 'Last Sync'}: {new Date(sensorData.created_at).toLocaleTimeString()}
                   </div>
                 </div>
               </div>
@@ -1555,7 +1559,7 @@ export default function Home() {
               {/* Weather Card */}
               <div id="weatherSection" className="weather-section" style={{ display: 'block' }}>
                 <div className="weather-header" onClick={() => setIsWeatherExpanded(prev => !prev)}>
-                  <h2><i className="fas fa-cloud-sun"></i> Weather Forecast</h2>
+                  <h2><i className="fas fa-cloud-sun"></i> {t.weather_forecast}</h2>
                   <i className="fas fa-chevron-down" style={{ transform: isWeatherExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
                 </div>
                 <div className={`weather-content ${isWeatherExpanded ? 'expanded' : ''}`}>
@@ -1570,7 +1574,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-text-secondary)' }}>
-                      Loading weather details...
+                      {t.loading_weather}
                     </div>
                   )}
                 </div>
