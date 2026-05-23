@@ -244,6 +244,12 @@ const TRANSLATIONS = {
     dispatch: "Dispatch",
     admin: "Admin",
     from_north: "from North",
+    units: "units",
+    dispatch_title: "Select Incident Request for Dispatch",
+    dispatch_desc: "Select a request from the active list below to dispatch the volunteer to that specific location.",
+    what: "What Needed",
+    where: "Where (Location / Address)",
+    no_pending_requests: "No active requests available to dispatch volunteers to.",
     exhaustion_forecast: "Inventory Exhaustion Forecast",
     hrs_left: "hrs left",
     burn_rate: "Burn Rate",
@@ -383,6 +389,12 @@ const TRANSLATIONS = {
     dispatch: "ನಿಯೋಜಿಸು",
     admin: "ನಿರ್ವಾಹಕರು",
     from_north: "ಉತ್ತರದಿಂದ",
+    units: "ಘಟಕಗಳು",
+    dispatch_title: "ನಿಯೋಜನೆಗಾಗಿ ಘಟನೆ ವಿನಂತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    dispatch_desc: "ಸ್ವಯಂಸೇವಕರನ್ನು ಆ ನಿರ್ದಿಷ್ಟ ಸ್ಥಳಕ್ಕೆ ನಿಯೋಜಿಸಲು ಕೆಳಗಿನ ಸಕ್ರಿಯ ಪಟ್ಟಿಯಿಂದ ವಿನಂತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+    what: "ಏನು ಬೇಕಾಗಿದೆ",
+    where: "ಎಲ್ಲಿ (ಸ್ಥಳ / ವಿಳಾಸ)",
+    no_pending_requests: "ಸ್ವಯಂಸೇವಕರನ್ನು ನಿಯೋಜಿಸಲು ಯಾವುದೇ ಸಕ್ರಿಯ ವಿನಂತಿಗಳು ಲಭ್ಯವಿಲ್ಲ.",
     exhaustion_forecast: "ದಾಸ್ತಾನು ಖಾಲಿಯಾಗುವ ಮುನ್ಸೂಚನೆ",
     hrs_left: "ಗಂಟೆಗಳು ಬಾಕಿ",
     burn_rate: "ಬಳಕೆಯ ದರ",
@@ -428,6 +440,7 @@ export default function Home() {
   const [resources, setResources] = useState(DEFAULT_RESOURCES);
   const [volunteers, setVolunteers] = useState(DEFAULT_VOLUNTEERS);
   const [nextRequestId, setNextRequestId] = useState(1005);
+  const [dispatchingVolId, setDispatchingVolId] = useState(null);
 
   // Map & Location State
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -1012,15 +1025,15 @@ export default function Home() {
     setVolPhone('');
   };
 
-  const handleDispatchVolunteer = (volId) => {
-    const activeReqs = requests.filter(r => r.status === 'pending');
-    if (activeReqs.length === 0) {
-      showToast("No pending requests to dispatch volunteers to.", 'warning');
+  const handleDispatchVolunteer = (volId, reqId) => {
+    const target = requests.find(r => r.id === reqId);
+    if (!target) {
+      showToast("Request not found.", 'error');
       return;
     }
-    const target = activeReqs[0];
     setVolunteers(prev => prev.map(v => v.id === volId ? { ...v, status: 'busy' } : v));
     showToast(`Dispatched volunteer to ${target.requestId} (${target.resourceType}) site.`, 'success');
+    setDispatchingVolId(null);
   };
 
   const handleShowRoute = (request) => {
@@ -1251,33 +1264,6 @@ export default function Home() {
   const degToCardinal = (deg) => {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     return directions[Math.round(((deg % 360) / 45)) % 8];
-  };
-
-  const formatDuration = (hoursNum) => {
-    const totalHours = parseFloat(hoursNum);
-    if (isNaN(totalHours)) return 'N/A';
-    
-    const days = Math.floor(totalHours / 24);
-    const remainingHours = Math.round(totalHours % 24);
-    
-    if (lang === 'kn') {
-      if (days > 0) {
-        return remainingHours > 0 
-          ? `${days} ದಿನ ${remainingHours} ಗಂಟೆ` 
-          : `${days} ದಿನ`;
-      }
-      return `${remainingHours} ಗಂಟೆ`;
-    } else {
-      if (days > 0) {
-        const daysStr = days === 1 ? 'day' : 'days';
-        const hoursStr = remainingHours === 1 ? 'hour' : 'hours';
-        return remainingHours > 0 
-          ? `${days} ${daysStr} ${remainingHours} ${hoursStr}` 
-          : `${days} ${daysStr}`;
-      }
-      const hoursStr = remainingHours === 1 ? 'hour' : 'hours';
-      return `${remainingHours} ${hoursStr}`;
-    }
   };
 
   const getWeatherItems = (data) => {
@@ -1757,8 +1743,8 @@ export default function Home() {
                           <td><span className={`status-badge status-${v.status}`}>{v.status.toUpperCase()}</span></td>
                           <td>{v.phone}</td>
                           <td>
-                            <button className="btn btn-primary btn-small" onClick={() => handleDispatchVolunteer(v.id)} disabled={v.status === 'busy'}>
-                              Dispatch
+                            <button className="btn btn-primary btn-small" onClick={() => setDispatchingVolId(v.id)} disabled={v.status === 'busy'}>
+                              {t.dispatch}
                             </button>
                           </td>
                         </tr>
@@ -1817,7 +1803,7 @@ export default function Home() {
                       minHeight: '120px'
                     }}>
                       <div style={{ fontWeight: '700', marginBottom: '5px' }}><i className="fas fa-hourglass-half"></i> {f.name}</div>
-                      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>{formatDuration(f.hoursLeft)}</div>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.availableQuantity} <span style={{ fontSize: '14px' }}>{t.units}</span></div>
                       <div style={{ fontSize: '12px', marginTop: '5px' }}>
                         {t.burn_rate}: ~{f.hourlyRate} {t.units_hr}<br />
                         <span className={`status-badge status-${f.riskStatus}`}>{f.riskStatus.toUpperCase()} {t.risk}</span>
@@ -2293,6 +2279,81 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Dispatch Volunteer Modal */}
+      {dispatchingVolId !== null && (() => {
+        const vol = volunteers.find(v => v.id === dispatchingVolId);
+        const activeRequests = requests.filter(r => r.status !== 'resolved');
+        return (
+          <div id="dispatchModal" className="modal" style={{ display: 'flex' }}>
+            <div className="modal-content" style={{ maxWidth: '850px', width: '90%' }}>
+              <div className="modal-header">
+                <h2>{t.dispatch_title || "Dispatch Volunteer"}: {vol ? vol.name : ""}</h2>
+                <button className="btn-close" onClick={() => setDispatchingVolId(null)}>&times;</button>
+              </div>
+              <div style={{ marginBottom: '15px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                {t.dispatch_desc || "Select a request from the active list below to dispatch the volunteer to that specific location."}
+              </div>
+              
+              {activeRequests.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--color-text-secondary)' }}>
+                  {t.no_pending_requests || "No active requests available to dispatch volunteers to."}
+                </div>
+              ) : (
+                <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%' }}>
+                    <thead>
+                      <tr>
+                        <th>{t.id || "ID"}</th>
+                        <th>{t.what || "What"}</th>
+                        <th>{t.where || "Where"}</th>
+                        <th>{t.priority || "Priority"}</th>
+                        <th>{t.actions || "Actions"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeRequests.map(req => (
+                        <tr key={req.id}>
+                          <td><strong>{req.requestId}</strong></td>
+                          <td>
+                            <div style={{ fontWeight: 'bold' }}>{req.resourceType}</div>
+                            <div style={{ fontSize: '11px', color: '#666', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.description}>
+                              {req.description}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '13px' }}>{req.address || "Mandya Region"}</div>
+                            <div style={{ fontSize: '11px', color: '#888' }}>Lat: {req.lat.toFixed(4)}, Lng: {req.lng.toFixed(4)}</div>
+                          </td>
+                          <td>
+                            <span className={`status-badge status-${req.mlPriorityClass || 'low'}`}>
+                              {(req.mlPriorityClass || 'low').toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="btn btn-primary btn-small"
+                              onClick={() => handleDispatchVolunteer(dispatchingVolId, req.id)}
+                            >
+                              {t.dispatch || "Dispatch"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              
+              <div className="modal-footer" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setDispatchingVolId(null)}>
+                  {t.cancel || "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {toast.visible && (
         <div style={{
