@@ -1,4 +1,4 @@
-# 📡 ResQLink — Complete System Architecture & Workflow Document
+# <img src="./public/logo.png" width="40" height="40" align="absmiddle"> 📡 ResQLink — Complete System Architecture & Workflow Document
 
 > **Last Updated**: May 2026 | **Version**: 4.1
 > A unified, beautifully elaborated reference covering every module, technology, protocol, and data pipeline in the ResQLink disaster response platform.
