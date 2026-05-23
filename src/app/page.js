@@ -621,66 +621,35 @@ export default function Home() {
     fetchWeather(currentBaseLocation.lat, currentBaseLocation.lng);
   }, [currentBaseLocation, lang]);
 
-  // 2. Real-Time Supabase Subscription
+  // 2. Live Hardware Data Polling (Supabase REST API)
   useEffect(() => {
-    let channel = null;
+    const supabaseUrl = "https://roypndzefjunimxzvcnf.supabase.co/rest/v1/sensor_logs?select=*&order=created_at.desc&limit=1";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJveXBuZHplZmp1bmlteHp2Y25mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMTgwNTMsImV4cCI6MjA5Mzc5NDA1M30.bxHGO-nOBEsTBDUg8WIVHRr3Qyxy0g1DxokvVOHqK18";
 
-    const setupSupabase = async () => {
+    const fetchSensorData = async () => {
       try {
-        const res = await fetch('/api/config');
-        const config = await res.json();
-
-        if (config.SUPABASE_URL && config.SUPABASE_ANON_KEY) {
-          const { createClient } = require('@supabase/supabase-js');
-          const sbClient = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-
-          // Get latest log
-          const { data, error } = await sbClient
-            .from('sensor_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (data && data.length > 0) {
-            setSensorData(data[0]);
+        const response = await fetch(supabaseUrl, {
+          headers: {
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`
           }
-
-          // Live channel
-          channel = sbClient
-            .channel('sensor_logs_changes')
-            .on(
-              'postgres_changes',
-              { event: 'INSERT', schema: 'public', table: 'sensor_logs' },
-              (payload) => {
-                setSensorData(payload.new);
-              }
-            )
-            .subscribe();
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setSensorData(data[0]);
         }
       } catch (err) {
-        console.error("Supabase config error:", err);
+        console.error("Error fetching live hardware data:", err);
       }
     };
 
-    setupSupabase();
+    // Fetch immediately on mount
+    fetchSensorData();
 
-    // Fallback simulation timer if Supabase is offline (so cards show active updates)
-    const interval = setInterval(() => {
-      setSensorData(prev => ({
-        ...prev,
-        temperature: parseFloat((prev.temperature + (Math.random() - 0.5) * 0.2).toFixed(1)),
-        humidity: parseFloat(Math.min(100, Math.max(0, prev.humidity + (Math.random() - 0.5) * 0.5)).toFixed(1)),
-        soil_moisture: Math.max(0, prev.soil_moisture + Math.floor((Math.random() - 0.5) * 20)),
-        water_level: parseFloat(Math.max(0, prev.water_level + (Math.random() - 0.5) * 1.5).toFixed(1)),
-        seismic: parseFloat(Math.max(0, 0.02 + Math.random() * 0.1).toFixed(2)),
-        created_at: new Date().toISOString()
-      }));
-    }, 10000);
+    // Then poll every 10 seconds
+    const interval = setInterval(fetchSensorData, 10000);
 
-    return () => {
-      if (channel) channel.unsubscribe();
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   // 3. API Requests & Helper Functions
@@ -1542,7 +1511,7 @@ export default function Home() {
                     <div className="stat-card hw-card" id="hwCardWater"><div className="stat-content"><h3>{t.water}</h3><div className="value">{sensorData.water_level}</div></div></div>
                     <div className="stat-card hw-card" id="hwCardSoil"><div className="stat-content"><h3>{t.soil}</h3><div className="value">{sensorData.soil_moisture}</div></div></div>
                     <div className="stat-card hw-card" id="hwCardRain"><div className="stat-content"><h3>{t.rain}</h3><div className="value">{sensorData.rain_level}</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardAltitude"><div className="stat-content"><h3>{t.altitude}</h3><div className="value">{sensorData.altitude} m</div></div></div>
+
                   </div>
                   <div style={{ padding: '0 15px 15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
                     {t.last_sync || 'Last Sync'}: {new Date(sensorData.created_at).toLocaleTimeString()}
