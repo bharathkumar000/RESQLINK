@@ -6,12 +6,16 @@ class SOS {
   final String need;
   final int people;
   final String location;
-  final String status; // CREATED, RELAY_PENDING, RELAY_ACCEPTED, COMMAND_PENDING, DISPATCHED, COMPLETED
+  final String
+      status; // CREATED, RELAY_PENDING, RELAY_ACCEPTED, COMMAND_PENDING, DISPATCHED, COMPLETED
   final String relayDecision; // PENDING, APPROVED, REJECTED
   final String commandDecision; // PENDING, DISPATCHED, REJECTED
   final String eta;
   final DateTime timestamp;
   final DateTime lastUpdated;
+  final List<String> safetyChecklist;
+  final bool
+      synced; // Has this distress signal been synced to Next.js HQ Server/Supabase?
 
   SOS({
     required this.id,
@@ -25,6 +29,8 @@ class SOS {
     required this.eta,
     required this.timestamp,
     required this.lastUpdated,
+    this.safetyChecklist = const [],
+    this.synced = false,
   });
 
   SOS copyWith({
@@ -33,6 +39,8 @@ class SOS {
     String? commandDecision,
     String? eta,
     DateTime? lastUpdated,
+    List<String>? safetyChecklist,
+    bool? synced,
   }) {
     return SOS(
       id: this.id,
@@ -46,6 +54,8 @@ class SOS {
       eta: eta ?? this.eta,
       timestamp: this.timestamp,
       lastUpdated: lastUpdated ?? DateTime.now(),
+      safetyChecklist: safetyChecklist ?? this.safetyChecklist,
+      synced: synced ?? this.synced,
     );
   }
 
@@ -62,6 +72,8 @@ class SOS {
       'eta': eta,
       'timestamp': timestamp.toIso8601String(),
       'lastUpdated': lastUpdated.toIso8601String(),
+      'safetyChecklist': safetyChecklist,
+      'synced': synced,
     };
   }
 
@@ -78,6 +90,10 @@ class SOS {
       eta: map['eta'] ?? '',
       timestamp: DateTime.parse(map['timestamp']),
       lastUpdated: DateTime.parse(map['lastUpdated'] ?? map['timestamp']),
+      safetyChecklist: map['safetyChecklist'] != null
+          ? List<String>.from(map['safetyChecklist'])
+          : const [],
+      synced: map['synced'] ?? false,
     );
   }
 
