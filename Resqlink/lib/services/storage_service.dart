@@ -116,4 +116,30 @@ class StorageService {
   static bool isAdmin() {
     return _settingsBox.get('isAdmin', defaultValue: false);
   }
+
+  // Get available resources (seeded if not present)
+  static List<Map<String, dynamic>> getAvailableResources() {
+    final list = _settingsBox.get('resources');
+    if (list == null) {
+      final defaultRes = [
+        { 'id': 1, 'name': 'Emergency Medical Kit', 'type': 'Medical Supplies', 'totalQuantity': 500, 'availableQuantity': 350 },
+        { 'id': 2, 'name': 'Food Packages', 'type': 'Food & Water', 'totalQuantity': 1000, 'availableQuantity': 800 },
+        { 'id': 3, 'name': 'Emergency Tents', 'type': 'Shelter', 'totalQuantity': 100, 'availableQuantity': 75 },
+        { 'id': 4, 'name': 'Rescue Personnel', 'type': 'Rescue Team', 'totalQuantity': 50, 'availableQuantity': 40 },
+        { 'id': 5, 'name': 'Emergency Ambulances', 'type': 'Ambulance', 'totalQuantity': 20, 'availableQuantity': 15 },
+        { 'id': 6, 'name': 'Clean Drinking Water', 'type': 'Food & Water', 'totalQuantity': 5000, 'availableQuantity': 3200 },
+        { 'id': 7, 'name': 'Blankets & Sleeping Bags', 'type': 'Bedding', 'totalQuantity': 1500, 'availableQuantity': 1200 },
+        { 'id': 8, 'name': 'Inflatable Rescue Boats', 'type': 'Rescue Boats', 'totalQuantity': 40, 'availableQuantity': 28 },
+        { 'id': 9, 'name': 'Heavy Duty Excavators (JCB)', 'type': 'Heavy Machinery', 'totalQuantity': 15, 'availableQuantity': 10 }
+      ];
+      _settingsBox.put('resources', defaultRes);
+      return defaultRes;
+    }
+    return (list as List).map((item) => Map<String, dynamic>.from(item)).toList();
+  }
+
+  // Save available resources
+  static Future<void> saveAvailableResources(List<Map<String, dynamic>> resources) async {
+    await _settingsBox.put('resources', resources);
+  }
 }

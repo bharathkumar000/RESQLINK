@@ -1643,7 +1643,14 @@ export default function Home() {
                     </div>
                     <div className="form-group">
                       <label>{t.severity}</label>
-                      <input type="number" className="form-control" required min="1" max="5" value={adminSeverity} onChange={(e) => setAdminSeverity(e.target.value)} />
+                      <select className="form-control" required value={adminSeverity} onChange={(e) => setAdminSeverity(e.target.value)}>
+                        <option value="">Select Severity</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
                     </div>
                   </div>
 
@@ -1927,7 +1934,14 @@ export default function Home() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="userSeverity">{t.severity}</label>
-                      <input type="number" id="userSeverity" className="form-control" required min="1" max="5" value={userSeverity} onChange={(e) => setUserSeverity(e.target.value)} />
+                      <select id="userSeverity" className="form-control" required value={userSeverity} onChange={(e) => setUserSeverity(e.target.value)}>
+                        <option value="">Select Severity</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
                     </div>
                   </div>
 
