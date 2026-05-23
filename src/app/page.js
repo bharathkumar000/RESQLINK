@@ -526,7 +526,10 @@ export default function Home() {
     const savedUser = localStorage.getItem('drmsCurrentUser');
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const userObj = JSON.parse(savedUser);
+        setTimeout(() => {
+          setCurrentUser(userObj);
+        }, 0);
       } catch (e) {
         localStorage.removeItem('drmsCurrentUser');
       }
@@ -534,13 +537,13 @@ export default function Home() {
 
     // Restore Settings
     const savedLang = localStorage.getItem('resqlink_lang');
-    if (savedLang) setLang(savedLang);
-
     const savedTactical = localStorage.getItem('tacticalMode') === 'true';
-    setTacticalMode(savedTactical);
-
     const savedMobile = localStorage.getItem('mobileViewActive') === 'true';
-    setMobileView(savedMobile);
+    setTimeout(() => {
+      if (savedLang) setLang(savedLang);
+      setTacticalMode(savedTactical);
+      setMobileView(savedMobile);
+    }, 0);
 
     // Load requests from server, fallback to seeded DUMMY_REQUESTS if empty/fails
     const loadRequests = async () => {
@@ -653,7 +656,7 @@ export default function Home() {
   }, []);
 
   // 3. API Requests & Helper Functions
-  const fetchWeather = (lat, lng) => {
+  function fetchWeather(lat, lng) {
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${WEATHER_API_KEY}&units=metric&lang=${lang === 'kn' ? 'kn' : 'en'}`;
     fetch(url)
       .then(res => res.json())
@@ -661,7 +664,7 @@ export default function Home() {
         if (data.main) setWeatherData(data);
       })
       .catch(err => console.error('Error fetching weather:', err));
-  };
+  }
 
   const getAISummary = async () => {
     setIsAiLoading(true);
@@ -685,7 +688,7 @@ export default function Home() {
     }
   };
 
-  const calculateMLPriority = (resourceType, individualsAffected, severity) => {
+  function calculateMLPriority(resourceType, individualsAffected, severity) {
     let priorityClass = 'low';
     let baseScore = 0;
 
@@ -752,7 +755,7 @@ export default function Home() {
       priorityScore: finalScore,
       mlConfidence: confidence
     };
-  };
+  }
 
   // Live forecasting calculations
   const forecasts = useMemo(() => {
@@ -1334,7 +1337,7 @@ export default function Home() {
                     </form>
                     <div className="auth-link">
                       <a href="#" onClick={(e) => { e.preventDefault(); setShowRegister(true); }}>
-                        Don't have an account? Create one
+                        Don&apos;t have an account? Create one
                       </a>
                     </div>
                   </div>
