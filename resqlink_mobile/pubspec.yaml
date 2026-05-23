@@ -11,10 +11,14 @@ dependencies:
   cupertino_icons: ^1.0.6
   nearby_connections: 4.3.0
   permission_handler: ^11.3.1
+  http: ^1.2.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   uuid: ^4.3.3
   intl: ^0.19.0
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:
