@@ -1253,6 +1253,33 @@ export default function Home() {
     return directions[Math.round(((deg % 360) / 45)) % 8];
   };
 
+  const formatDuration = (hoursNum) => {
+    const totalHours = parseFloat(hoursNum);
+    if (isNaN(totalHours)) return 'N/A';
+    
+    const days = Math.floor(totalHours / 24);
+    const remainingHours = Math.round(totalHours % 24);
+    
+    if (lang === 'kn') {
+      if (days > 0) {
+        return remainingHours > 0 
+          ? `${days} ದಿನ ${remainingHours} ಗಂಟೆ` 
+          : `${days} ದಿನ`;
+      }
+      return `${remainingHours} ಗಂಟೆ`;
+    } else {
+      if (days > 0) {
+        const daysStr = days === 1 ? 'day' : 'days';
+        const hoursStr = remainingHours === 1 ? 'hour' : 'hours';
+        return remainingHours > 0 
+          ? `${days} ${daysStr} ${remainingHours} ${hoursStr}` 
+          : `${days} ${daysStr}`;
+      }
+      const hoursStr = remainingHours === 1 ? 'hour' : 'hours';
+      return `${remainingHours} ${hoursStr}`;
+    }
+  };
+
   const getWeatherItems = (data) => {
     if (!data) return [];
     const windDirection = data.wind && data.wind.deg !== undefined
@@ -1790,7 +1817,7 @@ export default function Home() {
                       minHeight: '120px'
                     }}>
                       <div style={{ fontWeight: '700', marginBottom: '5px' }}><i className="fas fa-hourglass-half"></i> {f.name}</div>
-                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.hoursLeft} <span style={{ fontSize: '14px' }}>{t.hrs_left}</span></div>
+                      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--color-primary)' }}>{formatDuration(f.hoursLeft)}</div>
                       <div style={{ fontSize: '12px', marginTop: '5px' }}>
                         {t.burn_rate}: ~{f.hourlyRate} {t.units_hr}<br />
                         <span className={`status-badge status-${f.riskStatus}`}>{f.riskStatus.toUpperCase()} {t.risk}</span>
