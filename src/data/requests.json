@@ -20,7 +20,7 @@
   },
   {
     "requestId": "REQ-001",
-    "resourceType": "Medical Supplies",
+    "resourceType": "Medical",
     "quantityRequested": 150,
     "quantityAllocated": 100,
     "quantityPending": 50,
