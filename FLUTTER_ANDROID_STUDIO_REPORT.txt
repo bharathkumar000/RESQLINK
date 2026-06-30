@@ -1,0 +1,691 @@
+================================================================================
+          RESQLINK MOBILE TIER: COMPREHENSIVE FLUTTER & ANDROID STUDIO
+                             TECHNICAL BLUEPRINT
+================================================================================
+Document Version: 4.1
+Target Audience: System Architects, Hackathon Judges, and Core Developers
+Release Date: May 2026
+Author: Core Development Team
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & MOBILE TIER OVERVIEW
+2. FLUTTER INTEGRATION & RATIONALE
+   2.1 Why Flutter & Dart?
+   2.2 Detailed Dependency Analysis (pubspec.yaml)
+3. CODEBASE ARCHITECTURE & BLUEPRINT
+   3.1 Entry Point (lib/main.dart)
+   3.2 Core Data Model (lib/models/sos.dart)
+   3.3 Local Persistence Engine (lib/services/storage_service.dart)
+   3.4 Peer-to-Peer Mesh Service (lib/services/wifi_service.dart)
+   3.5 Cloud Sync Bridge (lib/services/sync_bridge_service.dart)
+   3.6 User Interface Architecture (Screens Breakdown)
+4. OFFLINE MESH ROUTING PROTOCOL & CONFLICT RESOLUTION
+   4.1 Store-and-Forward Networking
+   4.2 P2P Cluster Connection Topology
+   4.3 Timestamp Conflict Resolution Protocol
+   4.4 Broadcast Storm Mitigation
+5. ANDROID STUDIO CONFIGURATION & BUILD PIPELINE
+   5.1 Kotlin DSL build.gradle.kts Settings
+   5.2 AndroidManifest.xml and Permissions Matrix
+   5.3 Physical Testing vs. Emulator Limitations
+   5.4 Command Line Compiling & Release Optimization
+6. BILINGUAL TRANSLATION & ACCESSIBILITY
+7. HACKATHON LIVE DEMONSTRATION SCRIPT & JUDGES' GUIDANCE
+   7.1 Preparation Steps
+   7.2 Live Action Demonstration Protocol
+   7.3 Technical Talking Points for Q&A
+
+================================================================================
+1. EXECUTIVE SUMMARY & MOBILE TIER OVERVIEW
+================================================================================
+In catastrophic disaster scenarios (e.g., floods, earthquakes, landslides), standard 
+telecommunication infrastructures—including cellular towers, internet backbones, and 
+power grids—are frequently disabled or destroyed. This leaves victims stranded without 
+a means of signaling for rescue, and prevents emergency command centers from assessing 
+the scale of the crisis in real-time. 
+
+ResQLink addresses this critical vulnerability by introducing a multi-tiered, 
+resilient communications ecosystem. The system is divided into four distinct tiers:
+  - Tier 1: IoT Hardware Stations (ESP32 microcontrollers reading temperature, 
+    humidity, soil moisture, flood level, and seismic telemetry).
+  - Tier 2: Offline Mobile Mesh Network (The Flutter Mobile Application).
+  - Tier 3 & 4: Cloud Persistence and Next.js Web Command Dashboard.
+  - Tier 5: External Services (Local Gemma LLM, OpenStreetMap routing, Telegram).
+
+The Mobile App (Tier 2) serves as the primary user-facing interface inside the 
+disaster zone. Built using the Flutter framework and compiled using Android Studio, 
+the application transforms ordinary Android smartphones into ad-hoc wireless mesh nodes. 
+By utilizing Google's Nearby Connections API, the mobile app creates a store-and-forward 
+mesh network over Bluetooth Low Energy (BLE) and Wi-Fi Direct. It allows victims, 
+volunteers (Relays), and Command HQ nodes to communicate, aggregate, and propagate 
+emergency SOS distress signals entirely offline. 
+
+When a volunteer walks from the disaster zone back to an area with connectivity, or 
+connects directly to the Command HQ local area network, the application triggers a 
+"Sync Bridge" process. This bridge automatically pushes the aggregated distress registry 
+to the centralized Next.js database and dashboard.
+
+================================================================================
+2. FLUTTER INTEGRATION & RATIONALE
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1 Why Flutter & Dart?
+--------------------------------------------------------------------------------
+Building a mission-critical disaster response app requires a framework that combines 
+high execution speed, native hardware access, rapid UI rendering, and quick compile times. 
+The development team selected Flutter and Dart for the following reasons:
+
+1. Native Compilation for Low-Power Execution:
+   Unlike hybrid frameworks (such as React Native or Ionic) that rely on Javascript 
+   bridges or WebViews, Dart compiles directly to native ARM64 machine code. This 
+   eliminates runtime translation overhead, maximizing execution speed and reducing 
+   battery drain. In a disaster scenario, saving battery life on a victim's smartphone 
+   is a life-or-death priority.
+
+2. Skia/Impeller High-Performance Rendering:
+   Flutter bypasses the native OS UI widgets and renders its layout pixel-by-pixel 
+   using its own rendering engine (Impeller/Skia). This guarantees that custom elements, 
+   such as the emergency status steppers, interactive Leaflet maps, and modal sheets, 
+   render at a locked 60 FPS or 120 FPS. This consistency is maintained across various 
+   Android versions, from older devices running Android 5.0 (API 21) up to the latest 
+   Android 14+ models.
+
+3. Asynchronous Event-Driven Architecture (Single-Thread Event Loop):
+   Dart's single-threaded architecture, powered by isolates and an event loop, is 
+   well-suited for managing multiple network events, file operations, and sensor updates. 
+   Scanning for Bluetooth beacons, listening for WiFi Direct handshakes, reading 
+   on-device GPS coordinates, and reading/writing to the local Hive database are all 
+   handled asynchronously without blocking the UI thread.
+
+4. Fast Prototyping (Hot Reload):
+   Flutter’s stateful hot reload enabled developers to iterate on UI components and 
+   tweak the ad-hoc sync logic instantly. This was done without rebuilding the entire 
+   application binary, saving development time during production cycles.
+
+--------------------------------------------------------------------------------
+2.2 Detailed Dependency Analysis (pubspec.yaml)
+--------------------------------------------------------------------------------
+The file `pubspec.yaml` specifies the core dependencies utilized by the Flutter mobile 
+application. Each package was selected to meet a specific technical requirement:
+
+* flutter: The primary framework SDK providing material widgets, animations, and engine 
+  utilities.
+* cupertino_icons: Provides iOS-styled icons, ensuring platform design compliance when 
+  needed.
+* nearby_connections (version 4.3.0): The most critical library in the mobile tier. 
+  It wraps Google's Nearby Connections API, exposing native Android and iOS P2P 
+  discovery and connection frameworks. It abstracts away the complex socket creation, 
+  Bluetooth pairing, and Wi-Fi Direct negotiations, presenting them as simple Dart streams 
+  and callbacks.
+* permission_handler (version ^11.3.1): Under Android 12, 13, and 14, requesting 
+  wireless permissions (Bluetooth Scan, Bluetooth Connect, Bluetooth Advertise, 
+  Nearby WiFi Devices, Fine/Coarse Location) requires run-time approval. This plugin 
+  handles these system dialog requests cleanly.
+* http (version ^1.2.0): Used by the Sync Bridge. It initiates HTTP POST requests 
+  to send JSON payloads containing unsynced emergency logs to the Next.js API endpoint.
+* hive (version ^2.2.3) & hive_flutter (version ^1.1.0): Hive is a lightweight, 
+  no-boilerplate, key-value NoSQL database written in pure Dart. It is optimized 
+  specifically for mobile storage, outperforming SQFlite by storing objects as direct 
+  binary payloads. It is utilized to store local SOS records and system settings 
+  without requiring a database server.
+* uuid (version ^4.3.3): Since multiple nodes generate SOS requests in an offline state, 
+  there is no central auto-incrementing ID server. The app uses `uuid` to generate 
+  universally unique identifiers (UUID v4) on-device, preventing ID collisions when 
+  merging registries.
+* intl (version ^0.19.0): Handles date, time, and currency formatting, which is 
+  essential for printing readable timestamps on distress signals.
+* flutter_map (version ^6.1.0) & latlong2 (version ^0.9.0): To display emergency 
+  locations on-screen without active internet access, the app utilizes `flutter_map`. 
+  This library is a React-like Leaflet map wrapper that renders OpenStreetMap image 
+  tiles. It plots GPS markers for all active SOS requests based on coordinate math.
+* geolocator (version ^11.0.0): Directly queries the physical GPS hardware on the 
+  phone, extracting high-precision latitude and longitude coordinates. This is 
+  essential for plotting a victim's exact position.
+
+================================================================================
+3. CODEBASE ARCHITECTURE & BLUEPRINT
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1 Entry Point (lib/main.dart)
+--------------------------------------------------------------------------------
+`main.dart` is the execution root of the application. It handles startup initialization, 
+global styling, and the main navigation shell.
+
+Key Tasks Performed in main.dart:
+1. Native Engine Binding & DB Initialization:
+   The main function initializes the Flutter framework binding and opens the Hive storage 
+   boxes before executing the app widget:
+   ```dart
+   void main() async {
+     WidgetsFlutterBinding.ensureInitialized();
+     await StorageService.init();
+     runApp(const ResQLinkApp());
+   }
+   ```
+2. Application Styling System:
+   A warm, organic Material 3 theme is defined to represent safety and emergency response:
+   - Primary Seed Color: `#6D8B74` (Muted Sage Green)
+   - Background Color: `#EFEAD8` (Light Sand)
+   - Scaffold Background: `#F7F5F0` (Soft Off-White)
+3. Runtime Permission Negotiation:
+   The `_requestPermissions()` function handles system-level prompts for locating 
+   and connecting to other devices:
+   ```dart
+   void _requestPermissions() async {
+     await [
+       Permission.location,
+       Permission.bluetooth,
+       Permission.bluetoothScan,
+       Permission.bluetoothConnect,
+       Permission.bluetoothAdvertise,
+       Permission.nearbyWifiDevices,
+       Permission.storage,
+     ].request();
+   }
+   ```
+4. Role Management:
+   Users are assigned specific roles: Victim, Relay, or Command. Depending on the 
+   active role, `main.dart` swaps the central widget inside the shell:
+   - `VictimScreen`: For stranded citizens to generate SOS signals.
+   - `RelayScreen`: For volunteers to triage and route incoming SOS signals.
+   - `CommandScreen`: For incident admins to coordinate dispatching and track resources.
+5. Global Mesh Signal Controller:
+   A bottom navigation bar houses a master switch to toggle the offline mesh. Toggling 
+   this switch executes `WifiService.instance.startMesh()` or `stopMesh()`.
+
+--------------------------------------------------------------------------------
+3.2 Core Data Model (lib/models/sos.dart)
+--------------------------------------------------------------------------------
+The `SOS` class defines the structured data model representing a distress request. 
+It supports local persistence (Hive) and P2P data exchange (Nearby Connections JSON).
+
+Fields Defined in the SOS Model:
+  - `id`: A unique UUID string generated by the victim's device.
+  - `name`: Contact name of the stranded individual/group spokesperson.
+  - `need`: Category of the resource requested (e.g., Medical Kit, Food, Rescue Boat).
+  - `people`: The integer count of individuals stranded at the location.
+  - `location`: Coordinate string in "Lat: 12.5118, Lng: 76.8851" format.
+  - `status`: The state machine string. Valid states include:
+    * `CREATED`: SOS generated, not yet transmitted.
+    * `RELAY_PENDING`: Transmitted to a volunteer node, awaiting local triage.
+    * `RELAY_ACCEPTED`: Volunteer has approved and verified the SOS locally.
+    * `COMMAND_PENDING`: SOS relayed closer to Command HQ, awaiting official dispatch.
+    * `DISPATCHED`: Emergency crews assigned, resource en route.
+    * `COMPLETED`: Rescue completed, individuals safe.
+  - `relayDecision` & `commandDecision`: Strings tracking local triage status (`PENDING`, 
+    `APPROVED`, `REJECTED`, `DISPATCHED`).
+  - `eta`: Estimated arrival time of emergency crews (e.g., "12 Mins").
+  - `timestamp`: Date and time when the victim first generated the request.
+  - `lastUpdated`: A crucial DateTime field that tracks modifications. This field is 
+    the basis for offline database reconciliation and conflict resolution.
+  - `safetyChecklist`: List of strings tracking specific required items (e.g., Water, First Aid).
+  - `synced`: A boolean flag checking whether this request has reached the central server.
+
+Serialization Functions:
+* `toMap()`: Formats the Dart object properties into a standard Map<String, dynamic> 
+  for JSON serialization and Hive database storage.
+* `fromMap()`: Restores a Map back into a structured `SOS` object.
+* `copyWith()`: Standard functional programming pattern to clone an object while 
+  selectively updating specific properties (e.g., changing status or setting the 
+  `synced` flag). This method automatically updates the `lastUpdated` timestamp to the 
+  current time.
+
+--------------------------------------------------------------------------------
+3.3 Local Persistence Engine (lib/services/storage_service.dart)
+--------------------------------------------------------------------------------
+`storage_service.dart` handles database reads and writes. Because target devices may 
+operate for days without cellular coverage, SQL servers or remote databases cannot 
+be run on-device. 
+
+Hive DB Implementation Details:
+- Hive uses two storage boxes:
+  - `_boxName` (`sos_box`): Stores the dictionary of active SOS logs. The key is 
+    the `requestId` (UUID) and the value is the serialized SOS map.
+  - `_settingsBoxName` (`settings_box`): Stores node parameters (active role, 
+    device name, HQ server endpoint IP, authentication tokens, and cached resources).
+- Hive is initialized during startup via `Hive.initFlutter()`.
+- The method `getAllSOS()` retrieves all records from the box, parsing them back into 
+  strongly typed Dart objects:
+  ```dart
+  static List<SOS> getAllSOS() {
+    try {
+      final list = _box.values.toList();
+      return list.map((val) {
+        if (val is Map) {
+          return SOS.fromMap(Map<String, dynamic>.from(val));
+        } else {
+          return SOS.fromJson(val.toString());
+        }
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+  ```
+- Seeded Resources: When the Command Admin logs in, the storage service seeds a 
+  default resource repository containing available gear (e.g., Tents, JCB excavators, 
+  drinking water, ambulances) and tracks their quantity. This allows offline dispatch 
+  assignments to deduct from available local inventory.
+
+--------------------------------------------------------------------------------
+3.4 Peer-to-Peer Mesh Service (lib/services/wifi_service.dart)
+--------------------------------------------------------------------------------
+`wifi_service.dart` coordinates offline communication. It acts as the transport and 
+session layer, orchestrating background processes to establish connections and exchange 
+data with neighboring nodes.
+
+Mesh Service Protocol Details:
+- Service Identifier: `"com.resqlink.mesh"` (Both discovering and advertising nodes 
+  must share this ID to filter out other Nearby connections).
+- Connection Strategy: `Strategy.P2P_CLUSTER`. This topology allows nodes to connect 
+  with multiple peers simultaneously. It forms a multi-directional cluster rather than a 
+  point-to-point bridge (`P2P_POINT_TO_POINT`) or a hub-and-spoke star network (`P2P_STAR`). 
+  This setup is optimal for ad-hoc, multi-hop mesh networking.
+- Dual-Mode Execution: When the mesh is toggled on, the device starts advertising 
+  and discovering simultaneously:
+  ```dart
+  Future<bool> startMesh() async {
+    await stopMesh();
+    bool advStarted = await _startAdvertising();
+    bool discStarted = await _startDiscovery();
+    _updateStatus();
+    return advStarted || discStarted;
+  }
+  ```
+- Connection Handshake Flow:
+  1. Discovery: The `Nearby().startDiscovery()` stream triggers the `onEndpointFound` 
+     callback when a peer device is detected within range.
+  2. Auto-Request: The discovering node automatically calls `Nearby().requestConnection()` 
+     to connect with the target endpoint, using a formatted name string containing the 
+     node name and its current role (e.g., "HQ_COMMAND (Command)").
+  3. Auto-Accept: In the `onConnectionInitiated` callback, the receiving node accepts the 
+     connection request automatically:
+     ```dart
+     void _onConnectionInitiated(String endpointId, ConnectionInfo info) {
+       Nearby().acceptConnection(
+         endpointId,
+         onPayLoadRecieved: (id, payload) => _onPayloadReceived(endpointId, payload),
+         onPayloadTransferUpdate: (id, payloadTransferUpdate) {},
+       );
+     }
+     ```
+  4. Sync and Data Swap: Once the connection is confirmed in `onConnectionResult`, 
+     `syncAllData()` is triggered. Both devices exchange their entire local SOS registries 
+     as serialized JSON strings converted into raw byte arrays:
+     ```dart
+     void syncAllData() {
+       if (connectedPeers.isEmpty) return;
+       final localSOSList = StorageService.getAllSOS();
+       final dataMap = {
+         'type': 'SYNC',
+         'role': StorageService.getRole(),
+         'deviceName': StorageService.getDeviceName(),
+         'sosList': localSOSList.map((sos) => sos.toMap()).toList(),
+       };
+       final bytes = Uint8List.fromList(utf8.encode(json.encode(dataMap)));
+       for (var endpointId in connectedPeers.keys) {
+         Nearby().sendBytesPayload(endpointId, bytes);
+       }
+     }
+     ```
+
+--------------------------------------------------------------------------------
+3.5 Cloud Sync Bridge (lib/services/sync_bridge_service.dart)
+--------------------------------------------------------------------------------
+The sync bridge uploads gathered mesh data to the central Next.js server when internet 
+connectivity is restored.
+
+Sync Protocol:
+1. Online Check: A lightweight HTTP GET request pings the dashboard API (`/api/requests`) 
+   with a 3-second timeout to check if the server is reachable:
+   ```dart
+   static Future<bool> isServerOnline() async {
+     try {
+       final baseUrl = StorageService.getServerUrl();
+       final response = await http.get(Uri.parse('$baseUrl/api/requests'))
+                                   .timeout(const Duration(seconds: 3));
+       return response.statusCode == 200;
+     } catch (_) {
+       return false;
+     }
+   }
+   ```
+2. Schema Translation: Local SOS records must be converted to match the relational database 
+   schema expected by the Next.js API. For example, status values are mapped as follows:
+   - `COMPLETED` ➔ `resolved`
+   - `DISPATCHED` ➔ `allocated`
+   - `RELAY_ACCEPTED` ➔ `partial`
+   - All others ➔ `pending`
+   Additionally, coordinates are extracted from the string representation into separate 
+   decimal values:
+   ```dart
+   double lat = 12.5118;
+   double lng = 76.8851;
+   try {
+     final parts = sos.location.split(',');
+     lat = double.parse(parts[0].replaceAll('Lat:', '').trim());
+     lng = double.parse(parts[1].replaceAll('Lng:', '').trim());
+   } catch (_) {}
+   ```
+3. Batch Delivery: Serialized payloads are batched and POSTed to `$baseUrl/api/requests` 
+   using a JSON header.
+4. Local Database Update: If the server returns an HTTP 200, the local Hive database 
+   updates the `synced` property for the transmitted SOS objects:
+   ```dart
+   final updatedSos = sos.copyWith(synced: true);
+   await StorageService.saveSOS(updatedSos);
+   ```
+
+--------------------------------------------------------------------------------
+3.6 User Interface Architecture (Screens Breakdown)
+--------------------------------------------------------------------------------
+The user interface is split into modular screens that map to roles:
+
+1. `LoginScreen` (lib/screens/login_screen.dart):
+   Provides an authentication gateway. It is configured for offline authentication, 
+   verifying entered credentials against hardcoded rules (User ID: `1`, Code: `1` for 
+   normal citizens; Admin ID: `2`, Code: `2` for Command HQ). This allows access to 
+   the app in the field without verifying passwords against a remote server.
+
+2. `VictimScreen` (lib/screens/victim_screen.dart):
+   Displays distress signaling controls. It queries the `Geolocator` GPS service, 
+   formats coordinates, and allows users to input their name, number of stranded individuals, 
+   critical needs, and safety checklists (e.g., floatation devices, thermal blankets). 
+   It features a visual progress stepper:
+   `Created ➔ Relay Pending ➔ Relay Verified ➔ Dispatch Active ➔ Rescue Team En Route`
+   This stepper updates dynamically based on the local database state.
+
+3. `RelayScreen` (lib/screens/relay_screen.dart):
+   Displays active distress signals within physical range. Volunteers can tap a request 
+   to review its details and perform local triage:
+   - **Accept**: Changes the status to `RELAY_ACCEPTED` and `COMMAND_PENDING`. This 
+     validates the request and readies it for propagation to Command HQ.
+   - **Reject/Escalate**: Marks requests that are resolved or require immediate response.
+   The screen lists connected peer devices, indicating active wireless mesh pathways.
+
+4. `CommandScreen` (lib/screens/command_screen.dart):
+   Designed for dispatch coordinators. It aggregates distress records gathered from 
+   volunteer devices. It displays key stats (e.g., active requests, total affected individuals, 
+   resolved cases). Tapping a request opens a dispatch dialog where administrators 
+   can select volunteers, deduct supplies from the local resource registry, calculate 
+   travel times, and set an ETA.
+
+5. `MapScreen` (lib/screens/map_screen.dart):
+   Uses `flutter_map` to render an offline map populated with markers for active SOS requests. 
+   Markers are color-coded by severity and status (Red = pending, Orange = dispatched, 
+   Green = resolved). Tapping a marker displays a summary card detailing the request, 
+   its safety checklist, and its sync status.
+
+================================================================================
+4. OFFLINE MESH ROUTING PROTOCOL & CONFLICT RESOLUTION
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1 Store-and-Forward Networking
+--------------------------------------------------------------------------------
+In an offline mesh network, communication does not rely on a direct end-to-end path 
+between the sender (Victim) and receiver (Command HQ). Instead, the app implements a 
+Store-and-Forward networking paradigm:
+1. Store: The Victim device saves the SOS payload locally in its Hive database.
+2. Hop 1 (Victim ➔ Relay): When a volunteer (Relay) walks into the victim's physical 
+   vicinity, the devices establish a Nearby Connection. The victim's device uploads the 
+   distress payload to the volunteer's phone.
+3. Forward: The volunteer walks away, carrying the payload.
+4. Hop 2 (Relay ➔ Command HQ): Once the volunteer comes within range of Command HQ, 
+   the volunteer's phone establishes a connection with the HQ device and transmits 
+   the payload.
+5. Backpropagation: When HQ updates the status to "Dispatched" and enters an ETA, 
+   this updated record is sent back to the volunteer's phone. As the volunteer returns 
+   to the field, the updated status is synced back to the victim's device.
+
+```
++------------+         (Walks)         +------------+         (Walks)         +------------+
+|   VICTIM   | ------------ R1 ------->|   RELAY    | ------------ R2 ------->| COMMAND HQ |
+|  (Phone A) |                         |  (Phone B) |                         |  (Phone C) |
+|            | <----------- R4 --------|            | <----------- R3 --------|            |
++------------+                         +------------+                         +------------+
+```
+- R1: Victim syncs SOS payload (`RELAY_PENDING`) to volunteer.
+- R2: Volunteer walks to HQ and syncs verified SOS (`COMMAND_PENDING`) to Command.
+- R3: Command updates status to `DISPATCHED` (ETA "12 Mins") and syncs it back to volunteer.
+- R4: Volunteer walks back to victim, and the updated status syncs back to the victim.
+
+--------------------------------------------------------------------------------
+4.2 P2P Cluster Connection Topology
+--------------------------------------------------------------------------------
+ResQLink configures the Google Nearby Connections API with `Strategy.P2P_CLUSTER`. 
+Unlike `P2P_STAR` (where a central advertiser acts as a hub for multiple discoverers) 
+or `P2P_POINT_TO_POINT` (which allows only one-to-one connections), `P2P_CLUSTER` 
+permits any node to advertise and discover simultaneously. 
+
+This enables nodes to form ad-hoc connection meshes dynamically. For instance, a volunteer 
+can connect to a victim's device on one side and a second volunteer's device on the 
+other, allowing data to flow along multiple paths.
+
+--------------------------------------------------------------------------------
+4.3 Timestamp Conflict Resolution Protocol
+--------------------------------------------------------------------------------
+Without a centralized database to handle updates, offline networks face data conflict 
+issues. For example, if Phone A updates a record's status to `RELAY_ACCEPTED` while 
+Phone B maintains the status as `RELAY_PENDING`, the network must determine which state 
+is correct.
+
+To resolve this, ResQLink implements a Timestamp Conflict Resolution Protocol:
+- Every `SOS` object contains an ISO 8601 string field named `lastUpdated`.
+- Whenever a user modifies a record (e.g., a volunteer accepts an SOS, or HQ dispatches 
+  rescue crews), the system generates a new `lastUpdated` timestamp.
+- During a synchronization event between two devices, the local registries are exchanged. 
+  For each record, the receiving device checks if it already possesses the corresponding ID.
+  * If the ID is missing, the record is saved.
+  * If the ID exists, the system compares the incoming `lastUpdated` value with the 
+    local value:
+    ```dart
+    if (incomingSOS.lastUpdated.isAfter(existingSOS.lastUpdated)) {
+      StorageService.saveSOS(incomingSOS);
+      hasChanges = true;
+    }
+    ```
+- This ensures that the newest status update always overrides older information.
+
+--------------------------------------------------------------------------------
+4.4 Broadcast Storm Mitigation
+--------------------------------------------------------------------------------
+In a mesh network, infinite propagation loops (where devices continuously exchange the 
+same data) can cause broadcast storms that exhaust device resources.
+
+ResQLink mitigates this through conditional replication:
+1. Synchronization triggers only when the local database state changes.
+2. When a payload is received, the system compares timestamps. If the incoming payload contains 
+   no new or updated records, the local state is not updated, and no further data is sent:
+   ```dart
+   if (hasChanges) {
+     if (onSyncCompleted != null) {
+       onSyncCompleted!();
+     }
+     // Cascade updates to other peers
+     syncAllData();
+   }
+   ```
+3. If no updates are detected, the synchronization cycle ends, preserving battery and 
+   bandwidth.
+
+================================================================================
+5. ANDROID STUDIO CONFIGURATION & BUILD PIPELINE
+================================================================================
+
+--------------------------------------------------------------------------------
+5.1 Kotlin DSL build.gradle.kts Settings
+--------------------------------------------------------------------------------
+The project's Android application layer is configured using Kotlin DSL (`build.gradle.kts`) 
+rather than Groovy. This improves build-script safety and autocompletion in Android Studio.
+
+Key configuration values:
+- Namespace: `com.example.resqlink_mobile`
+- Compile SDK Version: Inherited from Flutter's global configuration (`flutter.compileSdkVersion`), 
+  ensuring compatibility with modern Android API features.
+- Java Compatibility: Configured for Java 17, which is required by the modern Gradle 
+  plugins and compilation engine:
+  ```kotlin
+  compileOptions {
+      sourceCompatibility = JavaVersion.VERSION_17
+      targetCompatibility = JavaVersion.VERSION_17
+  }
+  ```
+- Min SDK Version: Configured to support devices starting from API Level 21 (Android 5.0). 
+  This allows older, cheaper smartphones to be used as mesh nodes in disaster-prone regions.
+
+--------------------------------------------------------------------------------
+5.2 AndroidManifest.xml and Permissions Matrix
+--------------------------------------------------------------------------------
+The file `AndroidManifest.xml` configures the security permissions required by the 
+Nearby Connections API:
+
+1. Legacy Bluetooth Support:
+   - `android.permission.BLUETOOTH`: Allows the app to connect to paired Bluetooth devices.
+   - `android.permission.BLUETOOTH_ADMIN`: Permits the app to discover and pair Bluetooth 
+     devices.
+2. Modern Android 12+ Bluetooth Permissions:
+   - `android.permission.BLUETOOTH_SCAN`: Allows scanning for nearby Bluetooth beacons. 
+     The flag `neverForLocation` is omitted or configured to ensure location access works 
+     properly.
+   - `android.permission.BLUETOOTH_ADVERTISE`: Permits the device to broadcast Bluetooth 
+     beacons, making it discoverable.
+   - `android.permission.BLUETOOTH_CONNECT`: Allows the app to pair and connect to other 
+     devices without requiring user confirmation for each handshake.
+3. Wi-Fi Direct and Networking:
+   - `android.permission.CHANGE_WIFI_STATE`: Necessary for the Nearby API to toggle 
+     Wi-Fi Direct.
+   - `android.permission.ACCESS_WIFI_STATE`: Allows the app to read Wi-Fi signal strength 
+     and status.
+   - `android.permission.INTERNET`: Required for the Sync Bridge to connect to the Next.js 
+     HQ server.
+4. Android 13+ Local Network Permissions:
+   - `android.permission.NEARBY_WIFI_DEVICES`: Allows the app to discover neighboring 
+     devices over Wi-Fi without requesting the user's GPS location.
+5. Location Permissions:
+   - `ACCESS_COARSE_LOCATION` & `ACCESS_FINE_LOCATION`: Required by the operating system 
+     to scan for Bluetooth and Wi-Fi beacons.
+
+--------------------------------------------------------------------------------
+5.3 Physical Testing vs. Emulator Limitations
+--------------------------------------------------------------------------------
+> [!IMPORTANT]
+> The Nearby Connections API cannot be tested on standard Android Studio Emulators.
+
+Why Emulators fail:
+- Android emulators run inside virtualized environments that lack access to physical 
+  Wi-Fi Direct and Bluetooth hardware.
+- Emulators cannot generate or scan for physical Bluetooth beacons, nor can they initiate 
+  direct peer-to-peer Wi-Fi connections.
+Testing Requirements:
+- Testing requires at least two (and preferably three) physical Android devices.
+- Devices must have Bluetooth, Wi-Fi, and GPS enabled.
+- An internet connection is not required; devices communicate directly with each other.
+
+--------------------------------------------------------------------------------
+5.4 Command Line Compiling & Release Optimization
+--------------------------------------------------------------------------------
+To compile a release APK for deployment, developers run:
+```bash
+flutter build apk --release --target-platform android-arm64
+```
+Key Build Parameters:
+- `--release`: Enables compiler optimizations, minifies Dart code, and strips debugging 
+  symbols to reduce the binary size.
+- `--target-platform android-arm64`: Compiles specifically for 64-bit ARM architectures. 
+  This target optimizes execution speed and battery usage on modern smartphones.
+
+The compilation process outputs a optimized application package (APK) located at 
+`build/app/outputs/flutter-apk/app-release.apk`. In this repository, the pre-built 
+binary is located at `/Users/bharathkumara/Desktop/PROJECTS/RESQLINK/resqlink_mobile_arm64.apk`.
+
+================================================================================
+6. BILINGUAL TRANSLATION & ACCESSIBILITY
+================================================================================
+During natural disasters, relief tools must be accessible to local populations. 
+In the Karnataka region, the primary language spoken is Kannada.
+
+To accommodate local users, the Next.js Dashboard and the mobile application 
+support bilingual localization. Users can toggle the UI language between English 
+and Kannada:
+- English: "Submit Emergency Request" | "Status: Dispatch Active"
+- Kannada: "ತುರ್ತು ವಿನಂತಿಯನ್ನು ಸಲ್ಲಿಸಿ" | "ಸ್ಥಿತಿ: ರಕ್ಷಣೆ ತಂಡ ಹೊರಟಿದೆ"
+
+This translation capability helps rescue teams communicate with victims and coordinates 
+volunteer efforts more effectively.
+
+================================================================================
+7. HACKATHON LIVE DEMONSTRATION SCRIPT & JUDGES' GUIDANCE
+================================================================================
+This demonstration script shows the store-and-forward mesh network in action 
+using three physical Android devices.
+
+--------------------------------------------------------------------------------
+7.1 Preparation Steps
+--------------------------------------------------------------------------------
+1. Install the APK (`resqlink_mobile_arm64.apk`) on three Android smartphones.
+2. Open the app on each device and assign their roles:
+   - Phone A: Set to **Victim** (Device Name: `Victim Node`)
+   - Phone B: Set to **Relay** (Device Name: `Relay Node`)
+   - Phone C: Set to **Command** (Device Name: `HQ Command`)
+3. Turn off cellular data and disconnect from any Wi-Fi networks on all three phones 
+   to simulate an offline environment.
+4. Verify that Bluetooth, Wi-Fi, and Location services are enabled on all devices.
+5. Turn on the **Mesh Signal** toggle at the bottom of the screen on each device.
+
+--------------------------------------------------------------------------------
+7.2 Live Action Demonstration Protocol
+--------------------------------------------------------------------------------
+Step 1: Generate the Distress Signal (Victim Phone A)
+- On Phone A (Victim), input the following details:
+  * Name: `Stranded Group 3`
+  * Location: `Sector 4, Building B, Roof`
+  * Need: `Medical Kit & Food`
+  * Stranded: `4 People`
+- Tap **SEND OFFLINE SOS SIGNAL**.
+- *Result*: The request is saved to the local Hive database. The UI displays the 
+  status as `RELAY_PENDING`.
+
+Step 2: Sync to Relay (Victim Phone A ➔ Relay Phone B)
+- Place Phone A close to Phone B.
+- The devices will automatically discover each other and connect.
+- *Result*: The distress signal is transmitted to Phone B. The Relay UI displays a 
+  notification for an incoming request.
+- On Phone B, tap **ACCEPT**.
+- *Result*: The local database on Phone B updates the status to `COMMAND_PENDING`.
+
+Step 3: Relaying to HQ (Relay Phone B ➔ Command Phone C)
+- Move Phone B away from Phone A and place it near Phone C (Command).
+- *Result*: Phone B and Phone C establish a connection. The updated distress signal 
+  is transferred to the Command node.
+- On Phone C, tap **DISPATCH TEAM**.
+- In the dialog box, enter an estimated arrival time (e.g., `12 Mins`) and assign 
+  resources.
+- *Result*: The status on Phone C is updated to `DISPATCHED` with an ETA of `12 Mins`. 
+  This update is synced back to Phone B.
+
+Step 4: Status Propagation (Relay Phone B ➔ Victim Phone A)
+- Move Phone B back toward Phone A.
+- When the devices reconnect, the updated status is transferred to Phone A.
+- *Result*: Phone A's UI updates the progress stepper to **Rescue Sent** and displays 
+  a confirmation message: **"Rescue Team En Route! ETA: 12 Mins"**.
+
+--------------------------------------------------------------------------------
+7.3 Technical Talking Points for Q&A
+--------------------------------------------------------------------------------
+When explaining the architecture to judges, highlight these key design choices:
+
+- **Battery Optimization**: Explain that direct compilation to ARM64 code via Dart 
+  minimizes CPU utilization. This helps conserve device battery life during long power 
+  outages.
+- **Data Triage**: Point out that the `lastUpdated` timestamp conflict resolution 
+  system ensures that updates propagate correctly across nodes without requiring a 
+  central database.
+- **Zero-Configuration Setup**: Highlight that the system does not require network 
+  infrastructure (like routers or cellular towers) to establish connections and share 
+  emergency data.
+================================================================================

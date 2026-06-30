@@ -188,7 +188,6 @@ class _CommandScreenState extends State<CommandScreen> {
 
     return Column(
       children: [
-        _buildSyncCard(),
         _buildStatsHeader(),
         DefaultTabController(
           length: 2,
@@ -221,96 +220,6 @@ class _CommandScreenState extends State<CommandScreen> {
     );
   }
 
-  Widget _buildSyncCard() {
-    return Card(
-      margin: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 4),
-      color: Colors.grey[900],
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: _serverOnline
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.red.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _serverOnline ? Icons.cloud_done : Icons.cloud_off,
-                color: _serverOnline ? Colors.green : Colors.red,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'HQ Cloud Sync Bridge',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _serverOnline
-                        ? 'HQ Server ONLINE | ${StorageService.getServerUrl()}'
-                        : 'HQ Server OFFLINE | Check Network Settings',
-                    style: TextStyle(
-                      color:
-                          _serverOnline ? Colors.green[200] : Colors.red[200],
-                      fontSize: 10,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Local DB: $_unsyncedCount unsynced, $_syncedCount synced signals',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_syncing)
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2),
-              )
-            else
-              ElevatedButton.icon(
-                onPressed: _serverOnline ? _syncNow : _checkServerStatus,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _serverOnline
-                      ? const Color(0xFF6D8B74)
-                      : Colors.grey[800],
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  textStyle: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-                icon: Icon(
-                  _serverOnline ? Icons.sync : Icons.refresh,
-                  size: 14,
-                ),
-                label: Text(_serverOnline ? 'SYNC' : 'RETRY'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildStatsHeader() {
     final totalVerified = _sosList.length;

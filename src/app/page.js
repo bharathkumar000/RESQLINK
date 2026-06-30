@@ -120,7 +120,7 @@ const TRANSLATIONS = {
   en: {
     title: "ResQ Link",
     base: "Base: Mandya Emergency Operations Center (MIMS)",
-    hw_title: "Live Hardware Monitoring (Supabase)",
+    hw_title: "Live Hardware Monitoring ",
     temp: "Temperature",
     hum: "Humidity",
     soil: "Soil Moisture",
@@ -244,6 +244,12 @@ const TRANSLATIONS = {
     dispatch: "Dispatch",
     admin: "Admin",
     from_north: "from North",
+    units: "units",
+    dispatch_title: "Select Incident Request for Dispatch",
+    dispatch_desc: "Select a request from the active list below to dispatch the volunteer to that specific location.",
+    what: "What Needed",
+    where: "Where (Location / Address)",
+    no_pending_requests: "No active requests available to dispatch volunteers to.",
     exhaustion_forecast: "Inventory Exhaustion Forecast",
     hrs_left: "hrs left",
     burn_rate: "Burn Rate",
@@ -383,6 +389,12 @@ const TRANSLATIONS = {
     dispatch: "ನಿಯೋಜಿಸು",
     admin: "ನಿರ್ವಾಹಕರು",
     from_north: "ಉತ್ತರದಿಂದ",
+    units: "ಘಟಕಗಳು",
+    dispatch_title: "ನಿಯೋಜನೆಗಾಗಿ ಘಟನೆ ವಿನಂತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    dispatch_desc: "ಸ್ವಯಂಸೇವಕರನ್ನು ಆ ನಿರ್ದಿಷ್ಟ ಸ್ಥಳಕ್ಕೆ ನಿಯೋಜಿಸಲು ಕೆಳಗಿನ ಸಕ್ರಿಯ ಪಟ್ಟಿಯಿಂದ ವಿನಂತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+    what: "ಏನು ಬೇಕಾಗಿದೆ",
+    where: "ಎಲ್ಲಿ (ಸ್ಥಳ / ವಿಳಾಸ)",
+    no_pending_requests: "ಸ್ವಯಂಸೇವಕರನ್ನು ನಿಯೋಜಿಸಲು ಯಾವುದೇ ಸಕ್ರಿಯ ವಿನಂತಿಗಳು ಲಭ್ಯವಿಲ್ಲ.",
     exhaustion_forecast: "ದಾಸ್ತಾನು ಖಾಲಿಯಾಗುವ ಮುನ್ಸೂಚನೆ",
     hrs_left: "ಗಂಟೆಗಳು ಬಾಕಿ",
     burn_rate: "ಬಳಕೆಯ ದರ",
@@ -428,6 +440,7 @@ export default function Home() {
   const [resources, setResources] = useState(DEFAULT_RESOURCES);
   const [volunteers, setVolunteers] = useState(DEFAULT_VOLUNTEERS);
   const [nextRequestId, setNextRequestId] = useState(1005);
+  const [dispatchingVolId, setDispatchingVolId] = useState(null);
 
   // Map & Location State
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -497,6 +510,11 @@ export default function Home() {
   const [adminPhone, setAdminPhone] = useState('');
   const [adminDescription, setAdminDescription] = useState('');
 
+  // SMS Google Sheets Integration
+  const [smsData, setSmsData] = useState([]);
+  const [isSmsLoading, setIsSmsLoading] = useState(false);
+  const [smsError, setSmsError] = useState(null);
+
   // Volunteer Join Inputs
   const [volName, setVolName] = useState('');
   const [volRole, setVolRole] = useState('Medical');
@@ -513,7 +531,10 @@ export default function Home() {
     const savedUser = localStorage.getItem('drmsCurrentUser');
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const userObj = JSON.parse(savedUser);
+        setTimeout(() => {
+          setCurrentUser(userObj);
+        }, 0);
       } catch (e) {
         localStorage.removeItem('drmsCurrentUser');
       }
@@ -521,13 +542,13 @@ export default function Home() {
 
     // Restore Settings
     const savedLang = localStorage.getItem('resqlink_lang');
-    if (savedLang) setLang(savedLang);
-
     const savedTactical = localStorage.getItem('tacticalMode') === 'true';
-    setTacticalMode(savedTactical);
-
     const savedMobile = localStorage.getItem('mobileViewActive') === 'true';
-    setMobileView(savedMobile);
+    setTimeout(() => {
+      if (savedLang) setLang(savedLang);
+      setTacticalMode(savedTactical);
+      setMobileView(savedMobile);
+    }, 0);
 
     // Load requests from server, fallback to seeded DUMMY_REQUESTS if empty/fails
     const loadRequests = async () => {
@@ -608,70 +629,106 @@ export default function Home() {
     fetchWeather(currentBaseLocation.lat, currentBaseLocation.lng);
   }, [currentBaseLocation, lang]);
 
-  // 2. Real-Time Supabase Subscription
+  // 2. Live Hardware Data Polling (Supabase REST API)
   useEffect(() => {
-    let channel = null;
+    const supabaseUrl = "https://roypndzefjunimxzvcnf.supabase.co/rest/v1/sensor_logs?select=*&order=created_at.desc&limit=1";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJveXBuZHplZmp1bmlteHp2Y25mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMTgwNTMsImV4cCI6MjA5Mzc5NDA1M30.bxHGO-nOBEsTBDUg8WIVHRr3Qyxy0g1DxokvVOHqK18";
 
-    const setupSupabase = async () => {
+    const fetchSensorData = async () => {
       try {
-        const res = await fetch('/api/config');
-        const config = await res.json();
-
-        if (config.SUPABASE_URL && config.SUPABASE_ANON_KEY) {
-          const { createClient } = require('@supabase/supabase-js');
-          const sbClient = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-
-          // Get latest log
-          const { data, error } = await sbClient
-            .from('sensor_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (data && data.length > 0) {
-            setSensorData(data[0]);
+        const response = await fetch(supabaseUrl, {
+          headers: {
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`
           }
-
-          // Live channel
-          channel = sbClient
-            .channel('sensor_logs_changes')
-            .on(
-              'postgres_changes',
-              { event: 'INSERT', schema: 'public', table: 'sensor_logs' },
-              (payload) => {
-                setSensorData(payload.new);
-              }
-            )
-            .subscribe();
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setSensorData(data[0]);
         }
       } catch (err) {
-        console.error("Supabase config error:", err);
+        console.error("Error fetching live hardware data:", err);
       }
     };
 
-    setupSupabase();
+    // Fetch immediately on mount
+    fetchSensorData();
 
-    // Fallback simulation timer if Supabase is offline (so cards show active updates)
-    const interval = setInterval(() => {
-      setSensorData(prev => ({
-        ...prev,
-        temperature: parseFloat((prev.temperature + (Math.random() - 0.5) * 0.2).toFixed(1)),
-        humidity: parseFloat(Math.min(100, Math.max(0, prev.humidity + (Math.random() - 0.5) * 0.5)).toFixed(1)),
-        soil_moisture: Math.max(0, prev.soil_moisture + Math.floor((Math.random() - 0.5) * 20)),
-        water_level: parseFloat(Math.max(0, prev.water_level + (Math.random() - 0.5) * 1.5).toFixed(1)),
-        seismic: parseFloat(Math.max(0, 0.02 + Math.random() * 0.1).toFixed(2)),
-        created_at: new Date().toISOString()
-      }));
-    }, 10000);
+    // Then poll every 10 seconds
+    const interval = setInterval(fetchSensorData, 10000);
 
-    return () => {
-      if (channel) channel.unsubscribe();
-      clearInterval(interval);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 2.5 Live SMS Data Polling (Google Sheets)
+  useEffect(() => {
+    const fetchSmsData = async () => {
+      setIsSmsLoading(true);
+      setSmsError(null);
+      try {
+        const response = await fetch('https://docs.google.com/spreadsheets/d/10Tq6CAz9CBBOapmcSk9QXoVxuX0B7xmXxDE74F2CJpY/export?format=csv');
+        if (!response.ok) throw new Error('Failed to fetch SMS data');
+        const text = await response.text();
+        
+        const rows = [];
+        let currentRow = [];
+        let currentCell = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (char === '"') {
+            if (inQuotes && text[i+1] === '"') {
+              currentCell += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            currentRow.push(currentCell.trim());
+            currentCell = '';
+          } else if (char === '\n' && !inQuotes) {
+            currentRow.push(currentCell.trim());
+            rows.push(currentRow);
+            currentRow = [];
+            currentCell = '';
+          } else if (char !== '\r' || inQuotes) {
+            currentCell += char;
+          }
+        }
+        if (currentCell !== '' || currentRow.length > 0) {
+          currentRow.push(currentCell.trim());
+          rows.push(currentRow);
+        }
+        
+        if (rows.length > 0) {
+          const headers = rows[0];
+          const data = [];
+          for (let i = 1; i < rows.length; i++) {
+            if (rows[i].length === 0 || (rows[i].length === 1 && !rows[i][0])) continue;
+            const obj = {};
+            headers.forEach((header, index) => {
+              obj[header] = rows[i][index] || '';
+            });
+            data.push(obj);
+          }
+          setSmsData(data);
+        }
+      } catch (err) {
+        console.error("SMS Fetch Error:", err);
+        setSmsError(err.message);
+      } finally {
+        setIsSmsLoading(false);
+      }
     };
+
+    fetchSmsData();
+    const interval = setInterval(fetchSmsData, 5000); // 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // 3. API Requests & Helper Functions
-  const fetchWeather = (lat, lng) => {
+  function fetchWeather(lat, lng) {
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${WEATHER_API_KEY}&units=metric&lang=${lang === 'kn' ? 'kn' : 'en'}`;
     fetch(url)
       .then(res => res.json())
@@ -679,7 +736,7 @@ export default function Home() {
         if (data.main) setWeatherData(data);
       })
       .catch(err => console.error('Error fetching weather:', err));
-  };
+  }
 
   const getAISummary = async () => {
     setIsAiLoading(true);
@@ -703,7 +760,7 @@ export default function Home() {
     }
   };
 
-  const calculateMLPriority = (resourceType, individualsAffected, severity) => {
+  function calculateMLPriority(resourceType, individualsAffected, severity) {
     let priorityClass = 'low';
     let baseScore = 0;
 
@@ -770,7 +827,7 @@ export default function Home() {
       priorityScore: finalScore,
       mlConfidence: confidence
     };
-  };
+  }
 
   // Live forecasting calculations
   const forecasts = useMemo(() => {
@@ -1012,15 +1069,15 @@ export default function Home() {
     setVolPhone('');
   };
 
-  const handleDispatchVolunteer = (volId) => {
-    const activeReqs = requests.filter(r => r.status === 'pending');
-    if (activeReqs.length === 0) {
-      showToast("No pending requests to dispatch volunteers to.", 'warning');
+  const handleDispatchVolunteer = (volId, reqId) => {
+    const target = requests.find(r => r.id === reqId);
+    if (!target) {
+      showToast("Request not found.", 'error');
       return;
     }
-    const target = activeReqs[0];
     setVolunteers(prev => prev.map(v => v.id === volId ? { ...v, status: 'busy' } : v));
     showToast(`Dispatched volunteer to ${target.requestId} (${target.resourceType}) site.`, 'success');
+    setDispatchingVolId(null);
   };
 
   const handleShowRoute = (request) => {
@@ -1352,7 +1409,7 @@ export default function Home() {
                     </form>
                     <div className="auth-link">
                       <a href="#" onClick={(e) => { e.preventDefault(); setShowRegister(true); }}>
-                        Don't have an account? Create one
+                        Don&apos;t have an account? Create one
                       </a>
                     </div>
                   </div>
@@ -1511,25 +1568,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* AI Assistant situational brief */}
-            <div id="aiAssistantSection" className="weather-section" style={{ marginBottom: '24px', border: '2px solid var(--color-primary)', display: 'block' }}>
-              <div className="weather-header" style={{ background: 'linear-gradient(90deg, var(--color-darkest) 0%, var(--color-primary) 100%)', color: 'white' }}>
-                <h2 style={{ color: 'white' }}><i className="fas fa-robot"></i> {t.ai_assistant}</h2>
-                <button className="btn btn-secondary btn-small" onClick={getAISummary} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white' }} disabled={isAiLoading}>
-                  <i className="fas fa-sync-alt"></i> {isAiLoading ? t.analyzing_data : t.gen_report}
-                </button>
-              </div>
-              <div style={{ padding: '20px', background: 'rgba(0,0,0,0.02)' }}>
-                <div id="aiSummaryOutput" style={{ fontSize: '16px', lineHeight: '1.6', color: 'var(--color-text)', fontWeight: '500', opacity: isAiLoading ? 0.5 : 1 }}>
-                  {aiSummaryOutput || t.ai_helper_text}
-                </div>
-                {isAiLoading && (
-                  <div id="aiLoader" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-primary)', marginTop: '10px' }}>
-                    <i className="fas fa-circle-notch fa-spin"></i> {t.analyzing_data}
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Collapsible telemetry grids */}
             <div className="collapsible-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
@@ -1548,7 +1586,7 @@ export default function Home() {
                     <div className="stat-card hw-card" id="hwCardWater"><div className="stat-content"><h3>{t.water}</h3><div className="value">{sensorData.water_level}</div></div></div>
                     <div className="stat-card hw-card" id="hwCardSoil"><div className="stat-content"><h3>{t.soil}</h3><div className="value">{sensorData.soil_moisture}</div></div></div>
                     <div className="stat-card hw-card" id="hwCardRain"><div className="stat-content"><h3>{t.rain}</h3><div className="value">{sensorData.rain_level}</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardAltitude"><div className="stat-content"><h3>{t.altitude}</h3><div className="value">{sensorData.altitude} m</div></div></div>
+
                   </div>
                   <div style={{ padding: '0 15px 15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
                     {t.last_sync || 'Last Sync'}: {new Date(sensorData.created_at).toLocaleTimeString()}
@@ -1677,7 +1715,14 @@ export default function Home() {
                     </div>
                     <div className="form-group">
                       <label>{t.severity}</label>
-                      <input type="number" className="form-control" required min="1" max="5" value={adminSeverity} onChange={(e) => setAdminSeverity(e.target.value)} />
+                      <select className="form-control" required value={adminSeverity} onChange={(e) => setAdminSeverity(e.target.value)}>
+                        <option value="">Select Severity</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
                     </div>
                   </div>
 
@@ -1711,6 +1756,42 @@ export default function Home() {
                   </button>
                 </form>
               </div>
+
+              {/* Live SMS Data from Google Sheets */}
+              <div className="section" style={{ marginTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h2>Live SMS Requests (Google Sheets Sync)</h2>
+                  {isSmsLoading && <span className="status-badge status-partial">Syncing...</span>}
+                </div>
+                {smsError ? (
+                  <div className="alert alert-danger" style={{ color: '#d32f2f', padding: '10px', background: '#ffebee', borderRadius: '5px' }}>Error loading SMS data: {smsError}</div>
+                ) : (
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Category</th>
+                          <th>Quantity</th>
+                          <th>Location</th>
+                          <th>Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {smsData.length > 0 ? smsData.map((row, idx) => (
+                          <tr key={idx}>
+                            <td>{row.Category || 'N/A'}</td>
+                            <td>{row.Quantity || 'N/A'}</td>
+                            <td>{row.Location || 'N/A'}</td>
+                            <td style={{ whiteSpace: 'pre-wrap', maxWidth: '300px' }}>{row.Notes || 'N/A'}</td>
+                          </tr>
+                        )) : (
+                          <tr><td colSpan="4" style={{ textAlign: 'center' }}>No live SMS requests found</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Volunteer Dispatch Grid */}
@@ -1730,8 +1811,8 @@ export default function Home() {
                           <td><span className={`status-badge status-${v.status}`}>{v.status.toUpperCase()}</span></td>
                           <td>{v.phone}</td>
                           <td>
-                            <button className="btn btn-primary btn-small" onClick={() => handleDispatchVolunteer(v.id)} disabled={v.status === 'busy'}>
-                              Dispatch
+                            <button className="btn btn-primary btn-small" onClick={() => setDispatchingVolId(v.id)} disabled={v.status === 'busy'}>
+                              {t.dispatch}
                             </button>
                           </td>
                         </tr>
@@ -1790,7 +1871,7 @@ export default function Home() {
                       minHeight: '120px'
                     }}>
                       <div style={{ fontWeight: '700', marginBottom: '5px' }}><i className="fas fa-hourglass-half"></i> {f.name}</div>
-                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.hoursLeft} <span style={{ fontSize: '14px' }}>{t.hrs_left}</span></div>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>{f.availableQuantity} <span style={{ fontSize: '14px' }}>{t.units}</span></div>
                       <div style={{ fontSize: '12px', marginTop: '5px' }}>
                         {t.burn_rate}: ~{f.hourlyRate} {t.units_hr}<br />
                         <span className={`status-badge status-${f.riskStatus}`}>{f.riskStatus.toUpperCase()} {t.risk}</span>
@@ -1961,7 +2042,14 @@ export default function Home() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="userSeverity">{t.severity}</label>
-                      <input type="number" id="userSeverity" className="form-control" required min="1" max="5" value={userSeverity} onChange={(e) => setUserSeverity(e.target.value)} />
+                      <select id="userSeverity" className="form-control" required value={userSeverity} onChange={(e) => setUserSeverity(e.target.value)}>
+                        <option value="">Select Severity</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
                     </div>
                   </div>
 
@@ -2266,6 +2354,81 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Dispatch Volunteer Modal */}
+      {dispatchingVolId !== null && (() => {
+        const vol = volunteers.find(v => v.id === dispatchingVolId);
+        const activeRequests = requests.filter(r => r.status !== 'resolved');
+        return (
+          <div id="dispatchModal" className="modal" style={{ display: 'flex' }}>
+            <div className="modal-content" style={{ maxWidth: '850px', width: '90%' }}>
+              <div className="modal-header">
+                <h2>{t.dispatch_title || "Dispatch Volunteer"}: {vol ? vol.name : ""}</h2>
+                <button className="btn-close" onClick={() => setDispatchingVolId(null)}>&times;</button>
+              </div>
+              <div style={{ marginBottom: '15px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                {t.dispatch_desc || "Select a request from the active list below to dispatch the volunteer to that specific location."}
+              </div>
+              
+              {activeRequests.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--color-text-secondary)' }}>
+                  {t.no_pending_requests || "No active requests available to dispatch volunteers to."}
+                </div>
+              ) : (
+                <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%' }}>
+                    <thead>
+                      <tr>
+                        <th>{t.id || "ID"}</th>
+                        <th>{t.what || "What"}</th>
+                        <th>{t.where || "Where"}</th>
+                        <th>{t.priority || "Priority"}</th>
+                        <th>{t.actions || "Actions"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeRequests.map(req => (
+                        <tr key={req.id}>
+                          <td><strong>{req.requestId}</strong></td>
+                          <td>
+                            <div style={{ fontWeight: 'bold' }}>{req.resourceType}</div>
+                            <div style={{ fontSize: '11px', color: '#666', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.description}>
+                              {req.description}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '13px' }}>{req.address || "Mandya Region"}</div>
+                            <div style={{ fontSize: '11px', color: '#888' }}>Lat: {req.lat.toFixed(4)}, Lng: {req.lng.toFixed(4)}</div>
+                          </td>
+                          <td>
+                            <span className={`status-badge status-${req.mlPriorityClass || 'low'}`}>
+                              {(req.mlPriorityClass || 'low').toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="btn btn-primary btn-small"
+                              onClick={() => handleDispatchVolunteer(dispatchingVolId, req.id)}
+                            >
+                              {t.dispatch || "Dispatch"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              
+              <div className="modal-footer" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setDispatchingVolId(null)}>
+                  {t.cancel || "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {toast.visible && (
         <div style={{

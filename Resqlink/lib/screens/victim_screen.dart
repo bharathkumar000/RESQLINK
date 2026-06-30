@@ -40,6 +40,7 @@ class _VictimScreenState extends State<VictimScreen> {
   ];
   String? _selectedDistressType;
   bool _detectingLocation = false;
+  bool _sendingInstantSOS = false;
 
   @override
   void initState() {
@@ -59,6 +60,174 @@ class _VictimScreenState extends State<VictimScreen> {
       // Sort: newest first
       _myRequests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     });
+  }
+
+  void _sendInstantSOS() async {
+    setState(() {
+      _sendingInstantSOS = true;
+    });
+
+    try {
+      String locationStr = "Lat: 12.5118, Lng: 76.8851"; // Default fallback
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+
+        if (permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always) {
+          Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 4),
+          );
+          locationStr =
+              "Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)}";
+        }
+      }
+
+      final name = StorageService.getUsername();
+      final finalName = name.isEmpty ? "Citizen" : name;
+
+      final instantSOS = SOS(
+        id: "SOS-INST-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}",
+        name: finalName,
+        need: 'CRITICAL RESCUE HELP NEEDED',
+        people: 1,
+        location: locationStr,
+        status: 'RELAY_PENDING',
+        relayDecision: 'PENDING',
+        commandDecision: 'PENDING',
+        eta: '',
+        timestamp: DateTime.now(),
+        lastUpdated: DateTime.now(),
+        safetyChecklist: ['Urgent Extraction Required'],
+        synced: false,
+      );
+
+      await StorageService.saveSOS(instantSOS);
+      WifiService.instance.syncAllData();
+      _loadRequests();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+                SizedBox(width: 8),
+                Text('SOS Broadcasted'),
+              ],
+            ),
+            content: Text(
+              'Your emergency alert has been sent to the mesh network!\n\n'
+              '📍 Coordinates: $locationStr\n'
+              '📡 Status: Broadcasting to nearby rescue nodes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to trigger instant SOS: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sendingInstantSOS = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildInstantSOSButton() {
+    return GestureDetector(
+      onTap: _sendingInstantSOS ? null : _sendInstantSOS,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _sendingInstantSOS
+                ? [Colors.grey.shade400, Colors.grey.shade600]
+                : [const Color(0xFFD32F2F), const Color(0xFFC62828)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFD32F2F).withOpacity(0.3),
+              blurRadius: 15,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _sendingInstantSOS
+                  ? const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 4,
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.wifi_tethering_rounded,
+                        size: 44,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _sendingInstantSOS
+                  ? 'BROADCASTING SOS...'
+                  : 'TAP FOR INSTANT SOS',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'One-touch automatic GPS fetch & Bluetooth Mesh broadcast',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _submitSOS() async {
@@ -181,6 +350,8 @@ class _VictimScreenState extends State<VictimScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildInstantSOSButton(),
+          const SizedBox(height: 16),
           // Banner Status
           _buildMeshStatusBanner(),
           const SizedBox(height: 16),

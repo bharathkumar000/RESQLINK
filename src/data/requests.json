@@ -1,7 +1,26 @@
 [
   {
+    "id": 6,
+    "requestId": "REQ-1005",
+    "resourceType": "Shelter",
+    "quantityRequested": 4,
+    "quantityAllocated": 0,
+    "quantityPending": 4,
+    "lat": 12.530197252118091,
+    "lng": 76.89392916954306,
+    "severity": 4,
+    "individualsAffected": 9,
+    "status": "pending",
+    "priorityScore": 22,
+    "mlPriorityClass": "low",
+    "mlConfidence": 0.89,
+    "contactPerson": "qef",
+    "contactPhone": "34567898765",
+    "description": "kjnqpef"
+  },
+  {
     "requestId": "REQ-001",
-    "resourceType": "Medical",
+    "resourceType": "Medical Supplies",
     "quantityRequested": 150,
     "quantityAllocated": 100,
     "quantityPending": 50,
