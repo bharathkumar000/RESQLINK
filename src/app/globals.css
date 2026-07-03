@@ -663,6 +663,26 @@
             border-color: var(--color-sage);
         }
 
+        .stat-card.danger-alert-card {
+            background: linear-gradient(135deg, rgba(254, 226, 226, 0.95) 0%, rgba(252, 165, 165, 0.9) 100%) !important;
+            border-color: #ef4444 !important;
+            animation: card-alert-pulse 1.5s infinite alternate !important;
+        }
+        
+        .stat-card.danger-alert-card h3,
+        .stat-card.danger-alert-card .value {
+            color: #991b1b !important;
+        }
+        
+        @keyframes card-alert-pulse {
+            0% {
+                box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
+            }
+        }
+
         .stat-card .icon-container {
             width: 56px;
             height: 56px;
@@ -780,8 +800,9 @@
         }
 
         .main-workspace {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            align-items: start;
             gap: 24px;
             margin-bottom: 40px;
             min-height: 85vh;

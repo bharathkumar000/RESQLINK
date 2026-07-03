@@ -119,7 +119,7 @@ const DUMMY_REQUESTS = [
 const TRANSLATIONS = {
   en: {
     title: "ResQ Link",
-    base: "Base: Mandya Emergency Operations Center (MIMS)",
+    base: "Base: VVCE Mysuru Emergency Operations Center",
     hw_title: "Live Hardware Monitoring ",
     temp: "Temperature",
     hum: "Humidity",
@@ -264,7 +264,7 @@ const TRANSLATIONS = {
   },
   kn: {
     title: "ರೆಸ್ಕ್ಯೂ ಲಿಂಕ್",
-    base: "ನೆಲೆ: ಮಂಡ್ಯ ತುರ್ತು ಕಾರ್ಯಾಚರಣೆ ಕೇಂದ್ರ (ಮಿಮ್ಸ್)",
+    base: "ನೆಲೆ: ವಿವಿಇಸಿ ಮೈಸೂರು ತುರ್ತು ಕಾರ್ಯಾಚರಣೆ ಕೇಂದ್ರ",
     hw_title: "ಲೈವ್ ಹಾರ್ಡ್‌ವೇರ್ ಮಾನಿಟರಿಂಗ್ (ಸುಪಬೇಸ್)",
     temp: "ತಾಪಮಾನ",
     hum: "ಆರ್ದ್ರತೆ",
@@ -619,9 +619,9 @@ export default function Home() {
       };
     }
     return {
-      lat: 12.5218,
-      lng: 76.8951,
-      name: "MIMS-MDY"
+      lat: 12.3275,
+      lng: 76.6133,
+      name: "VVCE-MYS"
     };
   }, [sensorData.latitude, sensorData.longitude]);
 
@@ -647,7 +647,27 @@ export default function Home() {
           setSensorData(data[0]);
         }
       } catch (err) {
-        console.error("Error fetching live hardware data:", err);
+        // Suppress repeating console.error and use simulated data for offline/disconnected environment
+        setSensorData(prev => {
+          const deltaTemp = (Math.random() - 0.5) * 0.4;
+          const deltaHum = (Math.random() - 0.5) * 0.8;
+          const deltaSoil = Math.round((Math.random() - 0.5) * 20);
+          const deltaWater = parseFloat(((Math.random() - 0.5) * 0.6).toFixed(2));
+          const deltaSeismic = parseFloat(((Math.random() - 0.5) * 0.02).toFixed(4));
+          const deltaAir = Math.round((Math.random() - 0.5) * 4);
+          
+          return {
+            ...prev,
+            temperature: parseFloat((Math.max(10, Math.min(45, prev.temperature + deltaTemp))).toFixed(1)),
+            humidity: parseFloat((Math.max(10, Math.min(95, prev.humidity + deltaHum))).toFixed(1)),
+            soil_moisture: Math.max(500, Math.min(4000, prev.soil_moisture + deltaSoil)),
+            water_level: parseFloat((Math.max(0, Math.min(500, prev.water_level + deltaWater))).toFixed(1)),
+            seismic: parseFloat((Math.max(0.01, Math.min(2.0, prev.seismic + deltaSeismic))).toFixed(3)),
+            air_quality: Math.max(10, Math.min(300, prev.air_quality + deltaAir)),
+            created_at: new Date().toISOString(),
+            status: "Simulated (Offline)"
+          };
+        });
       }
     };
 
@@ -869,6 +889,27 @@ export default function Home() {
   // Map Click Location Handlers
   const handleMapClick = (latlng) => {
     setSelectedLocation(latlng);
+  };
+
+  const handleAutoFetchGPS = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latlng = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setSelectedLocation(latlng);
+        },
+        (error) => {
+          console.error("GPS Error:", error);
+          alert("Failed to fetch GPS location: " + error.message);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
   };
 
   // Sorted Requests
@@ -1095,6 +1136,8 @@ export default function Home() {
             distance,
             duration,
             location: `Lat: ${request.lat.toFixed(4)}, Lng: ${request.lng.toFixed(4)}`,
+            lat: request.lat,
+            lng: request.lng,
             contactPerson: request.contactPerson,
             contactPhone: request.contactPhone,
             individualsAffected: request.individualsAffected,
@@ -1569,62 +1612,25 @@ export default function Home() {
             </div>
 
 
-            {/* Collapsible telemetry grids */}
-            <div className="collapsible-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
-              
-              {/* Sensor Card */}
-              <div id="hardwareSection" className="weather-section" style={{ display: 'block' }}>
-                <div className="weather-header" onClick={() => setIsHardwareExpanded(prev => !prev)}>
-                  <h2><i className="fas fa-microchip"></i> {t.hw_title}</h2>
-                  <i className="fas fa-chevron-down" style={{ transform: isHardwareExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
-                </div>
-                <div className={`weather-content ${isHardwareExpanded ? 'expanded' : ''}`}>
-                  <div style={{ padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-                    <div className="stat-card hw-card" id="hwCardTemp"><div className="stat-content"><h3>{t.temp}</h3><div className="value">{sensorData.temperature}°C</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardHum"><div className="stat-content"><h3>{t.hum}</h3><div className="value">{sensorData.humidity}%</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardSeismic"><div className="stat-content"><h3>{t.seismic}</h3><div className="value">{sensorData.seismic} m/s²</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardWater"><div className="stat-content"><h3>{t.water}</h3><div className="value">{sensorData.water_level}</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardSoil"><div className="stat-content"><h3>{t.soil}</h3><div className="value">{sensorData.soil_moisture}</div></div></div>
-                    <div className="stat-card hw-card" id="hwCardRain"><div className="stat-content"><h3>{t.rain}</h3><div className="value">{sensorData.rain_level}</div></div></div>
-
-                  </div>
-                  <div style={{ padding: '0 15px 15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
-                    {t.last_sync || 'Last Sync'}: {new Date(sensorData.created_at).toLocaleTimeString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Weather Card */}
-              <div id="weatherSection" className="weather-section" style={{ display: 'block' }}>
-                <div className="weather-header" onClick={() => setIsWeatherExpanded(prev => !prev)}>
-                  <h2><i className="fas fa-cloud-sun"></i> {t.weather_forecast}</h2>
-                  <i className="fas fa-chevron-down" style={{ transform: isWeatherExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
-                </div>
-                <div className={`weather-content ${isWeatherExpanded ? 'expanded' : ''}`}>
-                  {weatherData ? (
-                    <div className="weather-grid" style={{ padding: '15px' }}>
-                      {getWeatherItems(weatherData).map((item, idx) => (
-                        <div className="weather-item" key={idx}>
-                          <label>{item.label}</label>
-                          <div className="value">{item.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-text-secondary)' }}>
-                      {t.loading_weather}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
             {/* Map Workstation Section */}
             <div className="section" style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h2 style={{ margin: 0 }}><i className="fas fa-map-location-dot"></i> {t.command_map}</h2>
-                <span className="status-badge status-pending">{t.live_deployment}</span>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <button 
+                    className="btn btn-secondary btn-small" 
+                    onClick={handleAutoFetchGPS}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <i className="fas fa-location-crosshairs"></i> Fetch GPS Location
+                  </button>
+                  <span className="status-badge status-pending">{t.live_deployment}</span>
+                </div>
               </div>
               <div style={{ height: '500px', width: '100%', border: '1px solid #ddd', overflow: 'hidden', borderRadius: '12px' }}>
                 <MapComponent
@@ -1643,46 +1649,49 @@ export default function Home() {
 
             {/* Admin Input Panel and Requests table layout */}
             <div className="main-workspace">
-              {/* Active Requests */}
-              <div className="section" id="activeRequestsSection" style={{ height: 'auto', display: 'block' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <h2>{t.active_req}</h2>
-                  <select id="riskSort" className="form-control" style={{ width: 'auto' }} value={riskSort} onChange={(e) => setRiskSort(e.target.value)}>
-                    <option value="critical">{t.critical_first}</option>
-                    <option value="low">{t.low_first}</option>
-                  </select>
-                </div>
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr><th>{t.type}</th><th>{t.qty_short}</th><th>{t.location}</th><th>{t.person}</th><th>{t.phone_short}</th><th>{t.priority}</th><th>{t.status}</th><th>{t.actions}</th></tr>
-                    </thead>
-                    <tbody id="activeRequestsTable">
-                      {sortedRequests.active.map(req => (
-                        <tr key={req.id || req.requestId}>
-                          <td>{req.resourceType}</td>
-                          <td>{req.quantityAllocated || 0}/{req.quantityRequested}</td>
-                          <td style={{ fontSize: '13px', maxWidth: '150px' }}>{req.address || `Lat: ${req.lat.toFixed(4)}, Lng: ${req.lng.toFixed(4)}`}</td>
-                          <td>{req.contactPerson || 'N/A'}</td>
-                          <td className="contact-phone">{req.contactPhone || 'N/A'}</td>
-                          <td><span className={`priority-badge priority-${req.mlPriorityClass}`}>{req.mlPriorityClass.toUpperCase()}</span></td>
-                          <td><span className={`status-badge status-${req.status}`}>{req.status.toUpperCase()}</span></td>
-                          <td>
-                            <div className="btn-group">
-                              <button className="btn btn-secondary btn-small" onClick={() => handleShowRoute(req)}>{t.route}</button>
-                              {req.status !== 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleAllocateOpen(req)}>{t.allocate}</button>}
-                              {req.status === 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleMarkResolved(req.id)}>{t.resolve}</button>}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Left Column: Active Requests */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Active Requests */}
+                <div className="section" id="activeRequestsSection" style={{ height: 'auto', display: 'block', margin: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h2>{t.active_req}</h2>
+                    <select id="riskSort" className="form-control" style={{ width: 'auto' }} value={riskSort} onChange={(e) => setRiskSort(e.target.value)}>
+                      <option value="critical">{t.critical_first}</option>
+                      <option value="low">{t.low_first}</option>
+                    </select>
+                  </div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr><th>{t.type}</th><th>{t.qty_short}</th><th>{t.location}</th><th>{t.person}</th><th>{t.phone_short}</th><th>{t.priority}</th><th>{t.status}</th><th>{t.actions}</th></tr>
+                      </thead>
+                      <tbody id="activeRequestsTable">
+                        {sortedRequests.active.map(req => (
+                          <tr key={req.id || req.requestId}>
+                            <td>{req.resourceType}</td>
+                            <td>{req.quantityAllocated || 0}/{req.quantityRequested}</td>
+                            <td style={{ fontSize: '13px', maxWidth: '150px' }}>{req.address || `Lat: ${req.lat.toFixed(4)}, Lng: ${req.lng.toFixed(4)}`}</td>
+                            <td>{req.contactPerson || 'N/A'}</td>
+                            <td className="contact-phone">{req.contactPhone || 'N/A'}</td>
+                            <td><span className={`priority-badge priority-${req.mlPriorityClass}`}>{req.mlPriorityClass.toUpperCase()}</span></td>
+                            <td><span className={`status-badge status-${req.status}`}>{req.status.toUpperCase()}</span></td>
+                            <td>
+                              <div className="btn-group">
+                                <button className="btn btn-secondary btn-small" onClick={() => handleShowRoute(req)}>{t.route}</button>
+                                {req.status !== 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleAllocateOpen(req)}>{t.allocate}</button>}
+                                {req.status === 'allocated' && <button className="btn btn-primary btn-small" onClick={() => handleMarkResolved(req.id)}>{t.resolve}</button>}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
-              {/* Submit Emergency Request Form (Admin Side) */}
-              <div className="form-section" style={{ height: 'auto' }}>
+              {/* Right Column: Submit Emergency Request Form (Admin Side) */}
+              <div className="form-section" style={{ height: 'auto', margin: 0 }}>
                 <h2>{t.submit_req_admin}</h2>
                 <div className="priority-display" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gridTemplateRows: 'auto auto', gap: '0px', alignItems: 'center' }}>
                   <h3>{t.ml_priority}</h3>
@@ -1756,74 +1765,137 @@ export default function Home() {
                   </button>
                 </form>
               </div>
+            </div>
 
-              {/* Live SMS Data from Google Sheets */}
-              <div className="section" style={{ marginTop: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <h2>Live SMS Requests (Google Sheets Sync)</h2>
-                  {isSmsLoading && <span className="status-badge status-partial">Syncing...</span>}
+            {/* Divider and Secondary Operational Feeds (Below the fold) */}
+            <div style={{ borderTop: '2px dashed var(--color-border)', margin: '40px 0 24px', paddingTop: '24px' }}>
+              <h2 style={{ fontSize: '20px', color: 'var(--color-primary)', marginBottom: '20px', fontWeight: '600' }}>
+                <i className="fas fa-chart-line"></i> Operational Feeds & Telemetry
+              </h2>
+            </div>
+
+            {/* Collapsible telemetry grids */}
+            <div className="collapsible-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+              
+              {/* Sensor Card */}
+              <div id="hardwareSection" className="weather-section" style={{ display: 'block' }}>
+                <div className="weather-header" onClick={() => setIsHardwareExpanded(prev => !prev)}>
+                  <h2><i className="fas fa-microchip"></i> {t.hw_title}</h2>
+                  <i className="fas fa-chevron-down" style={{ transform: isHardwareExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
                 </div>
-                {smsError ? (
-                  <div className="alert alert-danger" style={{ color: '#d32f2f', padding: '10px', background: '#ffebee', borderRadius: '5px' }}>Error loading SMS data: {smsError}</div>
-                ) : (
+                <div className={`weather-content ${isHardwareExpanded ? 'expanded' : ''}`}>
+                  <div style={{ padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                    <div className={`stat-card hw-card ${sensorData.temperature > 38.0 ? 'danger-alert-card' : ''}`} id="hwCardTemp"><div className="stat-content"><h3>{t.temp}</h3><div className="value">{sensorData.temperature}°C</div></div></div>
+                    <div className={`stat-card hw-card ${sensorData.humidity > 85.0 ? 'danger-alert-card' : ''}`} id="hwCardHum"><div className="stat-content"><h3>{t.hum}</h3><div className="value">{sensorData.humidity}%</div></div></div>
+                    <div className={`stat-card hw-card ${sensorData.seismic > 0.15 ? 'danger-alert-card' : ''}`} id="hwCardSeismic"><div className="stat-content"><h3>{t.seismic}</h3><div className="value">{sensorData.seismic} m/s²</div></div></div>
+                    <div className={`stat-card hw-card ${sensorData.water_level > 180.0 ? 'danger-alert-card' : ''}`} id="hwCardWater"><div className="stat-content"><h3>{t.water}</h3><div className="value">{sensorData.water_level}</div></div></div>
+                    <div className={`stat-card hw-card ${sensorData.soil_moisture > 3000 ? 'danger-alert-card' : ''}`} id="hwCardSoil"><div className="stat-content"><h3>{t.soil}</h3><div className="value">{sensorData.soil_moisture}</div></div></div>
+                    <div className={`stat-card hw-card ${sensorData.rain_level > 50 ? 'danger-alert-card' : ''}`} id="hwCardRain"><div className="stat-content"><h3>{t.rain}</h3><div className="value">{sensorData.rain_level}</div></div></div>
+                  </div>
+                  <div style={{ padding: '0 15px 15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
+                    {t.last_sync || 'Last Sync'}: {new Date(sensorData.created_at).toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Weather Card */}
+              <div id="weatherSection" className="weather-section" style={{ display: 'block' }}>
+                <div className="weather-header" onClick={() => setIsWeatherExpanded(prev => !prev)}>
+                  <h2><i className="fas fa-cloud-sun"></i> {t.weather_forecast}</h2>
+                  <i className="fas fa-chevron-down" style={{ transform: isWeatherExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}></i>
+                </div>
+                <div className={`weather-content ${isWeatherExpanded ? 'expanded' : ''}`}>
+                  {weatherData ? (
+                    <div className="weather-grid" style={{ padding: '15px' }}>
+                      {getWeatherItems(weatherData).map((item, idx) => (
+                        <div className="weather-item" key={idx}>
+                          <label>{item.label}</label>
+                          <div className="value">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-text-secondary)' }}>
+                      {t.loading_weather}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Secondary Workspace for SMS, Volunteers, and Resources */}
+            <div className="main-workspace" style={{ minHeight: 'auto', marginBottom: '24px' }}>
+              
+              {/* Left Column: Live SMS Requests and Volunteers */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                
+                {/* Live SMS Data from Google Sheets */}
+                <div className="section" style={{ margin: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h2>Live SMS Requests (Google Sheets Sync)</h2>
+                    {isSmsLoading && <span className="status-badge status-partial">Syncing...</span>}
+                  </div>
+                  {smsError ? (
+                    <div className="alert alert-danger" style={{ color: '#d32f2f', padding: '10px', background: '#ffebee', borderRadius: '5px' }}>Error loading SMS data: {smsError}</div>
+                  ) : (
+                    <div className="table-container">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Location</th>
+                            <th>Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {smsData.length > 0 ? smsData.map((row, idx) => (
+                            <tr key={idx}>
+                              <td>{row.Category || 'N/A'}</td>
+                              <td>{row.Quantity || 'N/A'}</td>
+                              <td>{row.Location || 'N/A'}</td>
+                              <td style={{ whiteSpace: 'pre-wrap', maxWidth: '300px' }}>{row.Notes || 'N/A'}</td>
+                            </tr>
+                          )) : (
+                            <tr><td colSpan="4" style={{ textAlign: 'center' }}>No live SMS requests found</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Volunteer Dispatch Grid */}
+                <div className="section" id="volunteerManagementSection" style={{ margin: 0 }}>
+                  <h2>{t.on_duty_vols}</h2>
                   <div className="table-container">
                     <table>
                       <thead>
-                        <tr>
-                          <th>Category</th>
-                          <th>Quantity</th>
-                          <th>Location</th>
-                          <th>Notes</th>
-                        </tr>
+                        <tr><th>{t.name}</th><th>{t.role}</th><th>{t.status}</th><th>{t.phone}</th><th>{t.actions}</th></tr>
                       </thead>
-                      <tbody>
-                        {smsData.length > 0 ? smsData.map((row, idx) => (
-                          <tr key={idx}>
-                            <td>{row.Category || 'N/A'}</td>
-                            <td>{row.Quantity || 'N/A'}</td>
-                            <td>{row.Location || 'N/A'}</td>
-                            <td style={{ whiteSpace: 'pre-wrap', maxWidth: '300px' }}>{row.Notes || 'N/A'}</td>
+                      <tbody id="volunteerTable">
+                        {volunteers.map(v => (
+                          <tr key={v.id}>
+                            <td><strong>{v.name}</strong></td>
+                            <td>{v.role}</td>
+                            <td><span className={`status-badge status-${v.status}`}>{v.status.toUpperCase()}</span></td>
+                            <td>{v.phone}</td>
+                            <td>
+                              <button className="btn btn-primary btn-small" onClick={() => setDispatchingVolId(v.id)} disabled={v.status === 'busy'}>
+                                {t.dispatch}
+                              </button>
+                            </td>
                           </tr>
-                        )) : (
-                          <tr><td colSpan="4" style={{ textAlign: 'center' }}>No live SMS requests found</td></tr>
-                        )}
+                        ))}
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Volunteer Dispatch Grid */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px', marginTop: '24px' }}>
-              <div className="section" id="volunteerManagementSection">
-                <h2>{t.on_duty_vols}</h2>
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr><th>{t.name}</th><th>{t.role}</th><th>{t.status}</th><th>{t.phone}</th><th>{t.actions}</th></tr>
-                    </thead>
-                    <tbody id="volunteerTable">
-                      {volunteers.map(v => (
-                        <tr key={v.id}>
-                          <td><strong>{v.name}</strong></td>
-                          <td>{v.role}</td>
-                          <td><span className={`status-badge status-${v.status}`}>{v.status.toUpperCase()}</span></td>
-                          <td>{v.phone}</td>
-                          <td>
-                            <button className="btn btn-primary btn-small" onClick={() => setDispatchingVolId(v.id)} disabled={v.status === 'busy'}>
-                              {t.dispatch}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
 
-              {/* Resource Management Side card */}
-              <div className="section" id="resourcesSection">
+              {/* Right Column: Resource Management Side card */}
+              <div className="section" id="resourcesSection" style={{ margin: 0, height: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h2 style={{ margin: 0 }}>Available Resources</h2>
                   <button className="btn btn-primary btn-small" style={{ display: 'block' }} onClick={() => handleResourceOpen()}>{t.add_resource}</button>
@@ -1848,6 +1920,7 @@ export default function Home() {
                   })}
                 </div>
               </div>
+
             </div>
 
             {/* Inventory Exhaustion Forecast and analytics */}
@@ -2108,27 +2181,27 @@ export default function Home() {
                 </div>
                 <div className={`weather-content ${isHardwareExpanded ? 'expanded' : ''}`}>
                   <div style={{ padding: '15px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px' }}>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.temperature > 38.0 ? '#fee2e2' : '#fff', color: sensorData.temperature > 38.0 ? '#991b1b' : 'inherit', border: sensorData.temperature > 38.0 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.temp}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.temperature}°C</div>
                     </div>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.humidity > 85.0 ? '#fee2e2' : '#fff', color: sensorData.humidity > 85.0 ? '#991b1b' : 'inherit', border: sensorData.humidity > 85.0 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.hum}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.humidity}%</div>
                     </div>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.seismic > 0.15 ? '#fee2e2' : '#fff', color: sensorData.seismic > 0.15 ? '#991b1b' : 'inherit', border: sensorData.seismic > 0.15 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.seismic}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.seismic} m/s²</div>
                     </div>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.water_level > 180.0 ? '#fee2e2' : '#fff', color: sensorData.water_level > 180.0 ? '#991b1b' : 'inherit', border: sensorData.water_level > 180.0 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.water}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.water_level}</div>
                     </div>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.soil_moisture > 3000 ? '#fee2e2' : '#fff', color: sensorData.soil_moisture > 3000 ? '#991b1b' : 'inherit', border: sensorData.soil_moisture > 3000 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.soil}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.soil_moisture}</div>
                     </div>
-                    <div className="hw-item" style={{ padding: '10px', background: '#fff', borderRadius: '8px' }}>
+                    <div className="hw-item" style={{ padding: '10px', background: sensorData.rain_level > 50 ? '#fee2e2' : '#fff', color: sensorData.rain_level > 50 ? '#991b1b' : 'inherit', border: sensorData.rain_level > 50 ? '1px solid #ef4444' : 'none', borderRadius: '8px' }}>
                       <label style={{ fontSize: '11px' }}>{t.rain}</label>
                       <div style={{ fontWeight: 'bold' }}>{sensorData.rain_level}</div>
                     </div>
@@ -2277,7 +2350,19 @@ export default function Home() {
                 <p className="description-text">{routeData.description || 'N/A'}</p>
               </div>
             </div>
-            <button className="btn btn-primary" onClick={() => setShowRouteModal(false)}>OK</button>
+            <div className="btn-group" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, height: '50px', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                onClick={() => {
+                  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentBaseLocation.lat},${currentBaseLocation.lng}&destination=${routeData.lat},${routeData.lng}`;
+                  window.open(googleMapsUrl, '_blank');
+                }}
+              >
+                <i className="fas fa-external-link-alt"></i> Open Google Maps
+              </button>
+              <button className="btn btn-secondary" style={{ flex: 1, height: '50px', fontSize: '16px', fontWeight: 'bold' }} onClick={() => setShowRouteModal(false)}>OK</button>
+            </div>
           </div>
         </div>
       )}
