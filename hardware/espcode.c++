@@ -244,8 +244,9 @@ void setup() {
     mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
     
     // Configure MPU6050 Motion Interrupt
-    mpu.setMotionInterruptPinActiveHigh(true);
-    mpu.setMotionInterruptLatch(true);
+    mpu.setInterruptPinPolarity(false); // Set pin to Active High (false = active high)
+    mpu.setInterruptPinLatch(true);     // Latch the interrupt pin until status is read
+    mpu.setMotionInterrupt(true);       // Enable motion detection interrupt
   }
 
   // Initialize BMP280
